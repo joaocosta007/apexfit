@@ -42,16 +42,6 @@ export default async function LoginPage({
         </CardHeader>
         <CardContent>
           <LoginForm initialError={initialError} />
-
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            <p className="font-semibold text-slate-900">Contas de demonstração</p>
-            <ul className="mt-3 space-y-1">
-              <li>Gerente: gerente@apexfit.com</li>
-              <li>Professor: professor.bruno@apexfit.com</li>
-              <li>Aluno: aluna.ana@apexfit.com</li>
-            </ul>
-            <p className="mt-3">Senha para todas: 123456</p>
-          </div>
         </CardContent>
       </Card>
     </main>
