@@ -1,21 +1,19 @@
-import Image from "next/image";
 import { cn } from "@/lib/utils";
-import unaspLogo from "../../unasp-logo.png";
 
 type UnaspLogoProps = {
   className?: string;
-  priority?: boolean;
 };
 
-export function UnaspLogo({ className, priority = false }: UnaspLogoProps) {
+export function UnaspLogo({ className }: UnaspLogoProps) {
   return (
-    <Image
-      src={unaspLogo}
-      alt="Logo UNASP"
-      width={220}
-      height={88}
-      priority={priority}
-      className={cn("h-auto w-auto object-contain", className)}
-    />
+    <span
+      aria-label="Logo CENAPE"
+      className={cn(
+        "inline-block whitespace-nowrap text-[44px] font-black uppercase leading-none tracking-[0.06em] text-primary",
+        className,
+      )}
+    >
+      CENAPE
+    </span>
   );
 }
