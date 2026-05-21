@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import {
   adicionarDivisaoAction,
   adicionarExercicioAction,
+  removerDivisaoAction,
   removerExercicioAction,
   salvarPlanoTreinoAction
 } from "@/app/actions";
@@ -155,7 +156,16 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
                           <h3 className="text-xl font-black text-slate-900">{split.splitName}</h3>
                           <p className="text-sm text-slate-600">{split.exercises.length} exercícios cadastrados</p>
                         </div>
-                        <Badge variant="outline">Divisão {split.sortOrder + 1}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline">Divisão {split.sortOrder + 1}</Badge>
+                          {split.sortOrder >= 3 && (
+                            <form action={removerDivisaoAction.bind(null, split.id, student.id)}>
+                              <Button type="submit" variant="ghost" size="icon" aria-label="Remover divisão">
+                                <Trash2 className="h-4 w-4 text-red-400" />
+                              </Button>
+                            </form>
+                          )}
+                        </div>
                       </div>
 
                       <div className="mb-5 space-y-3">

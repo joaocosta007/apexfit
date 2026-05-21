@@ -234,6 +234,34 @@ export async function adicionarDivisaoAction(planId: string, studentId: string) 
   revalidatePath(`/trainer/workouts/${studentId}`);
 }
 
+export async function removerDivisaoAction(splitId: string, studentId: string) {
+  const session = await requireRole(Role.TRAINER);
+
+  const split = await prisma.workoutSplit.findFirst({
+    where: {
+      id: splitId,
+      plan: {
+        studentId,
+        trainerId: session.user.id
+      }
+    }
+  });
+
+  if (!split) {
+    throw new Error("Divisão não encontrada.");
+  }
+
+  if (split.sortOrder < 3) {
+    throw new Error("Não é possível remover as divisões A, B e C.");
+  }
+
+  await prisma.workoutSplit.delete({
+    where: { id: splitId }
+  });
+
+  revalidatePath(`/trainer/workouts/${studentId}`);
+}
+
 export async function adicionarExercicioAction(splitId: string, studentId: string, formData: FormData) {
   const session = await requireRole(Role.TRAINER);
 
