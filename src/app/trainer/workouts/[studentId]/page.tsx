@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Role } from "@prisma/client";
+import { PlanType, Role } from "@prisma/client";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import {
   adicionarDivisaoAction,
@@ -69,6 +69,24 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
   const plan = student.studentPlans[0];
   const salvarPlano = salvarPlanoTreinoAction.bind(null, student.id);
 
+  const planTypeConfig = {
+    [PlanType.NORMAL]: {
+      label: "Normal",
+      hint: null,
+      badge: "bg-slate-100 text-slate-700"
+    },
+    [PlanType.LOW_VOLUME]: {
+      label: "Low Volume",
+      hint: "Protocolo low volume: prefira 1–2 séries por exercício com alta intensidade.",
+      badge: "bg-blue-100 text-blue-700"
+    },
+    [PlanType.STRENGTH]: {
+      label: "Força",
+      hint: "Protocolo de força: prefira 3–5 séries com cargas altas e baixas repetições (3–6 reps).",
+      badge: "bg-amber-100 text-amber-700"
+    }
+  };
+
   return (
     <AppShell
       title="Builder de Treino"
@@ -97,6 +115,20 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
                   defaultValue={plan?.planName ?? "Novo Plano de Treino"}
                   placeholder="Ex.: Hipertrofia Avançada"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="planType">Tipo de treino</Label>
+                <select
+                  id="planType"
+                  name="planType"
+                  defaultValue={plan?.planType ?? PlanType.NORMAL}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value={PlanType.NORMAL}>Normal</option>
+                  <option value={PlanType.LOW_VOLUME}>Low Volume</option>
+                  <option value={PlanType.STRENGTH}>Força</option>
+                </select>
               </div>
 
               <DayToggleFields selectedIndices={indicesDiasTreino(plan?.trainingDays)} />
@@ -151,6 +183,11 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
 
                   {plan.splits.map((split) => (
                     <TabsContent key={split.id} value={split.id}>
+                      {planTypeConfig[plan.planType].hint && (
+                        <div className={`mb-4 rounded-lg px-3 py-2 text-xs font-medium ${planTypeConfig[plan.planType].badge}`}>
+                          {planTypeConfig[plan.planType].hint}
+                        </div>
+                      )}
                       <div className="mb-4 flex items-center justify-between">
                         <div>
                           <h3 className="text-xl font-black text-slate-900">{split.splitName}</h3>

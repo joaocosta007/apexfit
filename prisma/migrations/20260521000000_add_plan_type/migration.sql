@@ -1,0 +1,3 @@
+CREATE TYPE "PlanType" AS ENUM ('NORMAL', 'LOW_VOLUME', 'STRENGTH');
+
+ALTER TABLE "workout_plans" ADD COLUMN "plan_type" "PlanType" NOT NULL DEFAULT 'NORMAL';

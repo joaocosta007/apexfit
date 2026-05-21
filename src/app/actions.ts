@@ -3,7 +3,7 @@
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Role } from "@prisma/client";
+import { PlanType, Role } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -153,12 +153,19 @@ export async function adicionarProfessorAction(formData: FormData) {
   redirect("/manager");
 }
 
+const planTypeValues: Record<string, PlanType> = {
+  NORMAL: PlanType.NORMAL,
+  LOW_VOLUME: PlanType.LOW_VOLUME,
+  STRENGTH: PlanType.STRENGTH
+};
+
 export async function salvarPlanoTreinoAction(studentId: string, formData: FormData) {
   const session = await requireRole(Role.TRAINER);
   await garantirAlunoDoProfessor(studentId, session.user.id);
 
   const planName = campoTexto(formData, "planName") || "Plano de Treino";
   const trainingDays = diasSelecionados(formData);
+  const planType = planTypeValues[campoTexto(formData, "planType")] ?? PlanType.NORMAL;
 
   const existingPlan = await prisma.workoutPlan.findFirst({
     where: {
@@ -176,6 +183,7 @@ export async function salvarPlanoTreinoAction(studentId: string, formData: FormD
       where: { id: existingPlan.id },
       data: {
         planName,
+        planType,
         trainingDays
       }
     });
@@ -185,6 +193,7 @@ export async function salvarPlanoTreinoAction(studentId: string, formData: FormD
         studentId,
         trainerId: session.user.id,
         planName,
+        planType,
         trainingDays,
         splits: {
           create: ["Treino A", "Treino B", "Treino C"].map((splitName, sortOrder) => ({
