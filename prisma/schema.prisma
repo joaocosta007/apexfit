@@ -28,11 +28,13 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
-  trainerStudents StudentTrainer[] @relation("TrainerStudents")
-  studentTrainers StudentTrainer[] @relation("StudentTrainers")
-  studentPlans    WorkoutPlan[]    @relation("StudentWorkoutPlans")
-  trainerPlans    WorkoutPlan[]    @relation("TrainerWorkoutPlans")
-  workoutLogs     WorkoutLog[]
+  trainerStudents    StudentTrainer[]      @relation("TrainerStudents")
+  studentTrainers    StudentTrainer[]      @relation("StudentTrainers")
+  studentPlans       WorkoutPlan[]         @relation("StudentWorkoutPlans")
+  trainerPlans       WorkoutPlan[]         @relation("TrainerWorkoutPlans")
+  workoutLogs        WorkoutLog[]
+  studentAssessments PhysicalAssessment[]  @relation("StudentAssessments")
+  trainerAssessments PhysicalAssessment[]  @relation("TrainerAssessments")
 
   @@index([role])
   @@map("users")
@@ -118,4 +120,31 @@ model WorkoutLog {
 
   @@index([studentId, exerciseId, date])
   @@map("workout_logs")
+}
+
+model PhysicalAssessment {
+  id          String   @id @default(cuid())
+  studentId   String   @map("student_id")
+  trainerId   String   @map("trainer_id")
+  date        DateTime @default(now())
+  weight      Float?
+  bodyFat     Float?   @map("body_fat")
+  chest       Float?
+  waist       Float?
+  abdomen     Float?
+  hip         Float?
+  rightArm    Float?   @map("right_arm")
+  leftArm     Float?   @map("left_arm")
+  rightThigh  Float?   @map("right_thigh")
+  leftThigh   Float?   @map("left_thigh")
+  rightCalf   Float?   @map("right_calf")
+  leftCalf    Float?   @map("left_calf")
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  student User @relation("StudentAssessments", fields: [studentId], references: [id], onDelete: Cascade)
+  trainer User @relation("TrainerAssessments", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@index([studentId, date])
+  @@map("physical_assessments")
 }

@@ -341,6 +341,45 @@ export async function removerExercicioAction(exerciseId: string, studentId: stri
   revalidatePath(`/trainer/workouts/${studentId}`);
 }
 
+export async function salvarAvaliacaoAction(studentId: string, formData: FormData) {
+  const session = await requireRole(Role.TRAINER);
+  await garantirAlunoDoProfessor(studentId, session.user.id);
+
+  function optFloat(campo: string): number | null {
+    const val = campoTexto(formData, campo);
+    if (!val) return null;
+    const n = parseFloat(val);
+    return isNaN(n) ? null : n;
+  }
+
+  const dateStr = campoTexto(formData, "date");
+  const date = dateStr ? new Date(dateStr) : new Date();
+
+  await prisma.physicalAssessment.create({
+    data: {
+      studentId,
+      trainerId: session.user.id,
+      date,
+      weight:     optFloat("weight"),
+      bodyFat:    optFloat("bodyFat"),
+      chest:      optFloat("chest"),
+      waist:      optFloat("waist"),
+      abdomen:    optFloat("abdomen"),
+      hip:        optFloat("hip"),
+      rightArm:   optFloat("rightArm"),
+      leftArm:    optFloat("leftArm"),
+      rightThigh: optFloat("rightThigh"),
+      leftThigh:  optFloat("leftThigh"),
+      rightCalf:  optFloat("rightCalf"),
+      leftCalf:   optFloat("leftCalf"),
+      notes:      campoTexto(formData, "notes") || null
+    }
+  });
+
+  revalidatePath(`/trainer/workouts/${studentId}`);
+  revalidatePath("/student/assessments");
+}
+
 export async function registrarTreinoAction(exerciseId: string, formData: FormData) {
   const session = await requireRole(Role.STUDENT);
   const completedLoadKg = z.coerce.number().min(0).max(1000).parse(campoTexto(formData, "completedLoadKg"));

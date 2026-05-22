@@ -7,6 +7,7 @@ import {
   adicionarExercicioAction,
   removerDivisaoAction,
   removerExercicioAction,
+  salvarAvaliacaoAction,
   salvarPlanoTreinoAction
 } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
@@ -69,6 +70,14 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
   const student = relation.student;
   const plan = student.studentPlans[0];
   const salvarPlano = salvarPlanoTreinoAction.bind(null, student.id);
+  const salvarAvaliacao = salvarAvaliacaoAction.bind(null, student.id);
+
+  const assessments = await prisma.physicalAssessment.findMany({
+    where: { studentId: student.id },
+    orderBy: { date: "desc" }
+  });
+
+  const todayStr = new Date().toISOString().slice(0, 10);
 
   const planTypeConfig = {
     [PlanType.NORMAL]: {
@@ -286,6 +295,119 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
             </CardContent>
           </Card>
         ) : null}
+        <Card>
+          <CardHeader>
+            <CardTitle>Avaliação Física</CardTitle>
+            <CardDescription>Registre peso, medidas e percentual de gordura do aluno.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <form action={salvarAvaliacao} className="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
+              <h4 className="font-bold text-slate-900">Nova avaliação</h4>
+
+              <div className="space-y-2">
+                <Label htmlFor="date">Data</Label>
+                <Input id="date" name="date" type="date" defaultValue={todayStr} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="weight">Peso (kg)</Label>
+                  <Input id="weight" name="weight" type="number" step="0.1" min="0" placeholder="75.5" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bodyFat">% Gordura</Label>
+                  <Input id="bodyFat" name="bodyFat" type="number" step="0.1" min="0" max="100" placeholder="18.0" />
+                </div>
+              </div>
+
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Medidas (cm)</p>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="chest">Peitoral</Label>
+                  <Input id="chest" name="chest" type="number" step="0.1" min="0" placeholder="95" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="waist">Cintura</Label>
+                  <Input id="waist" name="waist" type="number" step="0.1" min="0" placeholder="80" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="abdomen">Abdômen</Label>
+                  <Input id="abdomen" name="abdomen" type="number" step="0.1" min="0" placeholder="85" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hip">Quadril</Label>
+                  <Input id="hip" name="hip" type="number" step="0.1" min="0" placeholder="98" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rightArm">Braço D.</Label>
+                  <Input id="rightArm" name="rightArm" type="number" step="0.1" min="0" placeholder="35" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leftArm">Braço E.</Label>
+                  <Input id="leftArm" name="leftArm" type="number" step="0.1" min="0" placeholder="34" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rightThigh">Coxa D.</Label>
+                  <Input id="rightThigh" name="rightThigh" type="number" step="0.1" min="0" placeholder="56" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leftThigh">Coxa E.</Label>
+                  <Input id="leftThigh" name="leftThigh" type="number" step="0.1" min="0" placeholder="55" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rightCalf">Panturrilha D.</Label>
+                  <Input id="rightCalf" name="rightCalf" type="number" step="0.1" min="0" placeholder="37" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leftCalf">Panturrilha E.</Label>
+                  <Input id="leftCalf" name="leftCalf" type="number" step="0.1" min="0" placeholder="36" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Observações</Label>
+                <textarea
+                  id="notes"
+                  name="notes"
+                  rows={3}
+                  placeholder="Ex.: aluno relatou boa disposição, aumentou carga no leg press..."
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                />
+              </div>
+
+              <Button type="submit" className="w-full">Salvar avaliação</Button>
+            </form>
+
+            {assessments.length > 0 ? (
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-900">Histórico</h4>
+                {assessments.map((a) => (
+                  <div key={a.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                    <p className="mb-2 font-bold text-slate-900">
+                      {a.date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                    </p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-600">
+                      {a.weight     != null && <span>Peso: <strong>{a.weight} kg</strong></span>}
+                      {a.bodyFat    != null && <span>Gordura: <strong>{a.bodyFat}%</strong></span>}
+                      {a.chest      != null && <span>Peitoral: <strong>{a.chest} cm</strong></span>}
+                      {a.waist      != null && <span>Cintura: <strong>{a.waist} cm</strong></span>}
+                      {a.abdomen    != null && <span>Abdômen: <strong>{a.abdomen} cm</strong></span>}
+                      {a.hip        != null && <span>Quadril: <strong>{a.hip} cm</strong></span>}
+                      {a.rightArm   != null && <span>Braço D.: <strong>{a.rightArm} cm</strong></span>}
+                      {a.leftArm    != null && <span>Braço E.: <strong>{a.leftArm} cm</strong></span>}
+                      {a.rightThigh != null && <span>Coxa D.: <strong>{a.rightThigh} cm</strong></span>}
+                      {a.leftThigh  != null && <span>Coxa E.: <strong>{a.leftThigh} cm</strong></span>}
+                      {a.rightCalf  != null && <span>Pant. D.: <strong>{a.rightCalf} cm</strong></span>}
+                      {a.leftCalf   != null && <span>Pant. E.: <strong>{a.leftCalf} cm</strong></span>}
+                    </div>
+                    {a.notes && <p className="mt-2 italic text-slate-500">{a.notes}</p>}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
       </section>
     </AppShell>
   );
