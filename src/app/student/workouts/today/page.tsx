@@ -1,5 +1,6 @@
 import { Role } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
+import { StudentBottomNav } from "@/components/student-bottom-nav";
 import { StudentWeeklyWorkout } from "@/components/student-weekly-workout";
 import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
@@ -81,6 +82,8 @@ export default async function StudentWorkoutTodayPage() {
       ) : null}
 
       {serializedPlan ? <StudentWeeklyWorkout plan={serializedPlan} todayIndex={todayIndex} /> : null}
+
+      <StudentBottomNav active="workout" />
     </AppShell>
   );
 }
