@@ -1,13 +1,24 @@
 import type { Metadata, Viewport } from "next";
+import { ServiceWorkerInit } from "@/components/service-worker-init";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ApexFit",
-  description: "Sistema de gestão de academia mobile-first em pt-BR."
+  description: "Gestão inteligente de treinos — CENAPE",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "ApexFit",
+    statusBarStyle: "default"
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg"
+  }
 };
 
 export const viewport: Viewport = {
-  themeColor: "#002B5E",
+  themeColor: "#1E40AF",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1
@@ -16,7 +27,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <ServiceWorkerInit />
+        {children}
+      </body>
     </html>
   );
 }

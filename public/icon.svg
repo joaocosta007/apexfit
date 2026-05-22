@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="#1E40AF"/>
+  <!-- Left weight plate -->
+  <rect x="52" y="192" width="64" height="128" rx="14" fill="white"/>
+  <!-- Left collar -->
+  <rect x="104" y="214" width="72" height="84" rx="10" fill="rgba(255,255,255,0.75)"/>
+  <!-- Bar -->
+  <rect x="164" y="234" width="184" height="44" rx="8" fill="white"/>
+  <!-- Right collar -->
+  <rect x="336" y="214" width="72" height="84" rx="10" fill="rgba(255,255,255,0.75)"/>
+  <!-- Right weight plate -->
+  <rect x="396" y="192" width="64" height="128" rx="14" fill="white"/>
+  <!-- Text -->
+  <text x="256" y="422" text-anchor="middle"
+    font-family="Arial Black, Arial, sans-serif"
+    font-size="68" font-weight="900" letter-spacing="4"
+    fill="white">APEXFIT</text>
+</svg>
