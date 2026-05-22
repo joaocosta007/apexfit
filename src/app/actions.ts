@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PlanType, Role } from "@prisma/client";
+import { findExerciseByCatalogId } from "@/lib/exercise-catalog";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -288,8 +289,11 @@ export async function adicionarExercicioAction(splitId: string, studentId: strin
     throw new Error("Divisão de treino não encontrada.");
   }
 
+  const catalogId = campoTexto(formData, "catalogId") || null;
+  const catalogExercise = catalogId ? findExerciseByCatalogId(catalogId) : null;
+
   const parsed = exerciseSchema.parse({
-    name: campoTexto(formData, "name"),
+    name: catalogExercise?.name ?? campoTexto(formData, "name"),
     sets: campoTexto(formData, "sets"),
     reps: campoTexto(formData, "reps"),
     loadKg: campoTexto(formData, "loadKg"),
@@ -299,6 +303,7 @@ export async function adicionarExercicioAction(splitId: string, studentId: strin
   await prisma.exercise.create({
     data: {
       splitId,
+      catalogId: catalogId ?? undefined,
       name: parsed.name,
       sets: parsed.sets,
       reps: parsed.reps,

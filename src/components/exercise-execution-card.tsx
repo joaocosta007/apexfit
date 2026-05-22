@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Minus, Plus } from "lucide-react";
+import { Minus, PlayCircle, Plus } from "lucide-react";
 import { registrarTreinoAction } from "@/app/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,10 @@ type ExerciseExecutionCardProps = {
     restTime: string;
   };
   lastLoad?: number | null;
+  videoUrl?: string | null;
 };
 
-export function ExerciseExecutionCard({ exercise, lastLoad }: ExerciseExecutionCardProps) {
+export function ExerciseExecutionCard({ exercise, lastLoad, videoUrl }: ExerciseExecutionCardProps) {
   const [completed, setCompleted] = useState(false);
   const [load, setLoad] = useState(exercise.loadKg);
   const action = registrarTreinoAction.bind(null, exercise.id);
@@ -34,7 +35,20 @@ export function ExerciseExecutionCard({ exercise, lastLoad }: ExerciseExecutionC
           <div className="flex items-start gap-4">
             <Checkbox checked={completed} onCheckedChange={(value) => setCompleted(Boolean(value))} aria-label="Marcar como feito" />
             <div className="min-w-0 flex-1">
-              <h3 className="text-base font-bold text-slate-900">{exercise.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900">{exercise.name}</h3>
+                {videoUrl && (
+                  <a
+                    href={videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Ver vídeo de ${exercise.name}`}
+                    className="flex-shrink-0 text-primary opacity-70 transition-opacity hover:opacity-100"
+                  >
+                    <PlayCircle className="h-5 w-5" />
+                  </a>
+                )}
+              </div>
               <p className="mt-1 text-sm text-slate-600">
                 {exercise.sets} séries • {exercise.reps} reps • descanso {exercise.restTime}
               </p>

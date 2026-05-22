@@ -25,6 +25,7 @@ type StudentWeeklyWorkoutProps = {
         loadKg: number;
         restTime: string;
         lastLoad: number | null;
+        videoUrl: string | null;
       }>;
     }>;
   };
@@ -139,7 +140,7 @@ export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutP
           ) : null}
 
           {selectedSplit.exercises.map((exercise) => (
-            <ExerciseExecutionCard key={exercise.id} exercise={exercise} lastLoad={exercise.lastLoad} />
+            <ExerciseExecutionCard key={exercise.id} exercise={exercise} lastLoad={exercise.lastLoad} videoUrl={exercise.videoUrl} />
           ))}
         </div>
       ) : null}

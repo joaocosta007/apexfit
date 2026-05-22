@@ -21,6 +21,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { formatarCarga } from "@/lib/utils";
 import { indicesDiasTreino } from "@/lib/workout";
+import { exerciseCatalog, exerciseGroups } from "@/lib/exercise-catalog";
 
 type WorkoutBuilderPageProps = {
   params: Promise<{ studentId: string }>;
@@ -234,8 +235,25 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
                       <form action={adicionarExercicioAction.bind(null, split.id, student.id)} className="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
                         <h4 className="font-bold text-slate-900">Adicionar exercício</h4>
                         <div className="space-y-2">
-                          <Label htmlFor={`name-${split.id}`}>Nome do Exercício</Label>
-                          <Input id={`name-${split.id}`} name="name" placeholder="Ex.: Supino Reto" required />
+                          <Label htmlFor={`catalogId-${split.id}`}>Exercício</Label>
+                          <select
+                            id={`catalogId-${split.id}`}
+                            name="catalogId"
+                            required
+                            defaultValue=""
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <option value="" disabled>Selecione um exercício...</option>
+                            {exerciseGroups.map((group) => (
+                              <optgroup key={group} label={group}>
+                                {exerciseCatalog
+                                  .filter((e) => e.group === group)
+                                  .map((e) => (
+                                    <option key={e.id} value={e.id}>{e.name}</option>
+                                  ))}
+                              </optgroup>
+                            ))}
+                          </select>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-2">

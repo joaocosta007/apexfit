@@ -88,9 +88,10 @@ model WorkoutSplit {
 
 model Exercise {
   id       String   @id @default(cuid())
-  splitId  String   @map("split_id")
-  name     String
-  sets     Int
+  splitId   String  @map("split_id")
+  catalogId String? @map("catalog_id")
+  name      String
+  sets      Int
   reps     Int
   loadKg   Float    @map("load_kg")
   restTime String   @map("rest_time")
