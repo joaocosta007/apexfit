@@ -99,3 +99,8 @@ export const exerciseGroups = Array.from(
 export function findExerciseByCatalogId(catalogId: string): ExerciseCatalogItem | undefined {
   return exerciseCatalog.find((e) => e.id === catalogId);
 }
+
+export function findExerciseByName(name: string): ExerciseCatalogItem | undefined {
+  const normalized = name.trim().toLowerCase();
+  return exerciseCatalog.find((e) => e.name.toLowerCase() === normalized);
+}

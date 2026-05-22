@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { diasDaSemana } from "@/lib/utils";
-import { findExerciseByCatalogId } from "@/lib/exercise-catalog";
+import { findExerciseByCatalogId, findExerciseByName } from "@/lib/exercise-catalog";
 
 export default async function StudentWorkoutTodayPage() {
   const session = await requireRole(Role.STUDENT);
@@ -60,7 +60,7 @@ export default async function StudentWorkoutTodayPage() {
             lastLoad: exercise.workoutLogs[0]?.completedLoadKg ?? null,
             videoUrl: exercise.catalogId
               ? (findExerciseByCatalogId(exercise.catalogId)?.videoUrl ?? null)
-              : null
+              : (findExerciseByName(exercise.name)?.videoUrl ?? null)
           }))
         }))
       }
