@@ -425,7 +425,7 @@ export async function registrarAlunoComConviteAction(token: string, formData: Fo
   });
 
   if (!invite || invite.used || invite.expiresAt < new Date()) {
-    throw new Error("Link de cadastro inválido ou expirado.");
+    redirect(`/cadastro/${token}?erro=link-invalido`);
   }
 
   const parsed = studentSchema.parse({
@@ -435,7 +435,7 @@ export async function registrarAlunoComConviteAction(token: string, formData: Fo
   });
 
   const existing = await prisma.user.findUnique({ where: { email: parsed.email } });
-  if (existing) throw new Error("E-mail já cadastrado.");
+  if (existing) redirect(`/cadastro/${token}?erro=email-existente`);
 
   const passwordHash = await bcrypt.hash(parsed.password, 10);
 
