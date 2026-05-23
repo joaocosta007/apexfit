@@ -2,17 +2,10 @@
 
 import { useState } from "react";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine
 } from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { formatarCarga } from "@/lib/utils";
 
 type ExerciseProgress = {
@@ -20,143 +13,131 @@ type ExerciseProgress = {
   data: { date: string; load: number }[];
 };
 
-type LoadEvolutionChartProps = {
-  exercises: ExerciseProgress[];
-};
-
 function formatDate(dateStr: string) {
-  const [, month, day] = dateStr.split("-");
-  return `${day}/${month}`;
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("pt-BR", { month: "short" });
 }
 
 function formatDateFull(dateStr: string) {
-  const [year, month, day] = dateStr.split("-");
-  return `${day}/${month}/${year}`;
+  const [y, m, d] = dateStr.split("-");
+  return `${d}/${m}/${y}`;
 }
 
-export function LoadEvolutionChart({ exercises }: LoadEvolutionChartProps) {
+export function LoadEvolutionChart({ exercises }: { exercises: ExerciseProgress[] }) {
   const sorted = [...exercises].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
   const [selectedName, setSelectedName] = useState(sorted[0]?.name ?? "");
 
   const selected = sorted.find((e) => e.name === selectedName);
   const data = selected?.data ?? [];
 
-  const firstLoad = data[0]?.load ?? 0;
-  const lastLoad = data[data.length - 1]?.load ?? 0;
-  const bestLoad = data.length > 0 ? Math.max(...data.map((d) => d.load)) : 0;
+  const firstLoad   = data[0]?.load ?? 0;
+  const bestLoad    = data.length > 0 ? Math.max(...data.map(d => d.load)) : 0;
+  const lastLoad    = data[data.length - 1]?.load ?? 0;
   const improvement = firstLoad > 0 ? ((lastLoad - firstLoad) / firstLoad) * 100 : 0;
-  const hasEnoughData = data.length >= 2;
+  const hasData     = data.length >= 2;
 
-  const ImprovementIcon =
-    improvement > 0 ? TrendingUp : improvement < 0 ? TrendingDown : Minus;
-  const improvementColor =
-    improvement > 0 ? "text-green-600" : improvement < 0 ? "text-red-500" : "text-slate-500";
-  const improvementBorder =
-    improvement > 0 ? "border-green-200 bg-green-50" : improvement < 0 ? "border-red-200 bg-red-50" : "";
+  const ImprovementIcon  = improvement > 0 ? TrendingUp : improvement < 0 ? TrendingDown : Minus;
+  const improvementColor = improvement > 0 ? "text-green-600" : improvement < 0 ? "text-red-500" : "text-slate-500";
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="mb-2 block text-sm font-semibold text-slate-600">Exercício</label>
+      {/* Selector */}
+      <div className="relative">
         <select
           value={selectedName}
           onChange={(e) => setSelectedName(e.target.value)}
-          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:ring-2 focus:ring-primary"
+          className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3.5 pr-10 text-sm font-bold text-slate-900 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
         >
           {sorted.map((e) => (
-            <option key={e.name} value={e.name}>
-              {e.name}
-            </option>
+            <option key={e.name} value={e.name}>{e.name}</option>
           ))}
         </select>
+        <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">▾</div>
       </div>
 
+      {/* Stat chips */}
       <div className="grid grid-cols-3 gap-3">
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-slate-500">1ª carga</p>
-            <p className="mt-1 text-base font-black text-slate-900">{formatarCarga(firstLoad)}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-3">
-            <p className="text-xs text-slate-500">Melhor</p>
-            <p className="mt-1 text-base font-black text-primary">{formatarCarga(bestLoad)}</p>
-          </CardContent>
-        </Card>
-        <Card className={improvementBorder}>
-          <CardContent className="p-3">
-            <p className="text-xs text-slate-500">Evolução</p>
-            <div className={`mt-1 flex items-center gap-1 ${improvementColor}`}>
-              <ImprovementIcon className="h-4 w-4 flex-shrink-0" />
-              <span className="text-base font-black">
-                {improvement >= 0 ? "+" : ""}
-                {improvement.toFixed(0)}%
-              </span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl bg-white p-3 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Início</p>
+          <p className="mt-1 text-lg font-black text-slate-900">{formatarCarga(firstLoad)}</p>
+        </div>
+        <div className="rounded-2xl bg-white p-3 shadow-sm">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Melhor</p>
+          <p className="mt-1 text-lg font-black text-slate-900">{formatarCarga(bestLoad)}</p>
+        </div>
+        <div className={`rounded-2xl p-3 shadow-sm ${improvement > 0 ? "bg-green-500" : improvement < 0 ? "bg-red-50" : "bg-slate-100"}`}>
+          <p className={`text-[10px] font-bold uppercase tracking-wide ${improvement > 0 ? "text-green-100" : "text-slate-400"}`}>Progresso</p>
+          <div className={`mt-1 flex items-center gap-0.5 ${improvement > 0 ? "text-white" : improvementColor}`}>
+            <ImprovementIcon className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="text-lg font-black">
+              {improvement >= 0 ? "+" : ""}{improvement.toFixed(0)}%
+            </span>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="pt-5">
-          {!hasEnoughData ? (
-            <div className="flex flex-col items-center py-8 text-center">
-              <TrendingUp className="mb-3 h-10 w-10 text-slate-200" />
-              <p className="text-sm font-semibold text-slate-500">
-                {data.length === 0 ? "Sem registros" : "Poucos registros ainda"}
-              </p>
-              <p className="mt-1 text-xs text-slate-400">
-                Complete mais treinos para o gráfico aparecer.
-              </p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={data} margin={{ top: 5, right: 8, left: -10, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+      {/* Chart */}
+      <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <p className="mb-3 text-sm font-bold text-slate-900">Histórico de Carga</p>
+
+        {!hasData ? (
+          <div className="flex flex-col items-center py-10 text-center">
+            <TrendingUp className="mb-3 h-10 w-10 text-slate-200" />
+            <p className="text-sm font-semibold text-slate-400">
+              {data.length === 0 ? "Sem registros ainda" : "Faça mais treinos para ver o gráfico"}
+            </p>
+          </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={data} margin={{ top: 5, right: 8, left: -12, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 10, fill: "#94a3b8" }}
                   tickFormatter={formatDate}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis
                   tick={{ fontSize: 10, fill: "#94a3b8" }}
-                  tickFormatter={(v) => `${v}kg`}
+                  tickFormatter={(v) => `${v}`}
                   domain={["auto", "auto"]}
+                  axisLine={false}
+                  tickLine={false}
                 />
-                <ReferenceLine
-                  y={bestLoad}
-                  stroke="#1E40AF"
-                  strokeDasharray="4 4"
-                  strokeOpacity={0.3}
-                />
+                <ReferenceLine y={bestLoad} stroke="#3B82F6" strokeDasharray="4 4" strokeOpacity={0.4} />
                 <Tooltip
                   formatter={(value) => [formatarCarga(typeof value === "number" ? value : 0), "Carga"]}
-                  labelFormatter={(label) => (typeof label === "string" ? formatDateFull(label) : String(label))}
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "1px solid #e2e8f0",
-                    fontSize: "12px",
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.08)"
-                  }}
+                  labelFormatter={(label) => typeof label === "string" ? formatDateFull(label) : String(label)}
+                  contentStyle={{ borderRadius: "12px", border: "1px solid #E2E8F0", fontSize: "12px", boxShadow: "0 4px 14px rgba(0,0,0,0.08)" }}
                 />
                 <Line
                   type="monotone"
                   dataKey="load"
-                  stroke="#1E40AF"
-                  strokeWidth={2.5}
-                  dot={{ fill: "#1E40AF", r: 4, strokeWidth: 0 }}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  stroke="#3B82F6"
+                  strokeWidth={3}
+                  dot={{ fill: "#3B82F6", r: 5, strokeWidth: 0 }}
+                  activeDot={{ r: 7, strokeWidth: 0, fill: "#2563EB" }}
                 />
               </LineChart>
             </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
+            <div className="mt-2 flex items-center justify-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-green-500" />
+              <span className="text-xs text-slate-400">Recorde Pessoal: {formatarCarga(bestLoad)}</span>
+            </div>
+          </>
+        )}
+      </div>
 
-      <p className="text-center text-xs text-slate-400">
-        {data.length} {data.length === 1 ? "registro" : "registros"} para {selectedName}
-      </p>
+      {/* Motivacional */}
+      {hasData && improvement > 0 && (
+        <div className="rounded-2xl bg-white p-5 text-center shadow-sm">
+          <p className="text-2xl">📊</p>
+          <p className="mt-1 font-bold text-slate-900">Continue treinando!</p>
+          <p className="mt-1 text-sm text-slate-400">Seus ganhos estão impressionantes. Mantenha a consistência!</p>
+        </div>
+      )}
     </div>
   );
 }

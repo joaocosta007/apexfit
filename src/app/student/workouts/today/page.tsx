@@ -76,19 +76,14 @@ export default async function StudentWorkoutTodayPage() {
     : null;
 
   return (
-    <AppShell
-      title="Treino de Hoje"
-      subtitle={`${diasDaSemana[todayIndex]?.nome ?? "Hoje"} • execute, marque como feito e registre a carga real.`}
-    >
+    <AppShell title="Treino de Hoje" variant="student">
       {!emailVerified && <EmailVerificationBanner />}
 
       {!plan ? (
-        <Card>
-          <CardContent className="pt-5">
-            <p className="font-semibold text-slate-900">Nenhum plano ativo encontrado.</p>
-            <p className="mt-2 text-sm text-slate-600">Peça ao seu professor para montar seu treino na ApexFit.</p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <p className="font-semibold text-slate-900">Nenhum plano ativo encontrado.</p>
+          <p className="mt-2 text-sm text-slate-500">Peça ao seu professor para montar seu treino na ApexFit.</p>
+        </div>
       ) : null}
 
       {serializedPlan ? <StudentWeeklyWorkout plan={serializedPlan} todayIndex={todayIndex} /> : null}

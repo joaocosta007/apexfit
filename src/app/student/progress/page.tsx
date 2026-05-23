@@ -34,18 +34,17 @@ export default async function StudentProgressPage() {
 
   return (
     <AppShell
-      title="Evolução"
-      subtitle="Acompanhe a progressão de carga de cada exercício."
+      title="Evolução de Carga"
+      subtitle="Acompanhe seu progresso ao longo do tempo"
+      variant="student"
     >
       {exercises.length === 0 ? (
-        <Card>
-          <CardContent className="pt-5">
-            <p className="font-semibold text-slate-900">Nenhum registro ainda.</p>
-            <p className="mt-2 text-sm text-slate-600">
-              Complete treinos e registre a carga para ver sua evolução aqui.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <p className="font-semibold text-slate-900">Nenhum registro ainda.</p>
+          <p className="mt-2 text-sm text-slate-500">
+            Complete treinos e registre a carga para ver sua evolução aqui.
+          </p>
+        </div>
       ) : (
         <LoadEvolutionChart exercises={exercises} />
       )}

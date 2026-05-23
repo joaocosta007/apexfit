@@ -1,10 +1,7 @@
+import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import { BrandMark } from "@/components/brand-mark";
 import { LoginForm } from "@/components/login-form";
-import { UnaspLogo } from "@/components/unasp-logo";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { authOptions, roleHomePath } from "@/lib/auth";
 
 export default async function LoginPage({
@@ -13,10 +10,7 @@ export default async function LoginPage({
   searchParams?: { erro?: string; error?: string; cadastro?: string; verificado?: string; senha?: string };
 }) {
   const session = await getServerSession(authOptions);
-
-  if (session?.user?.role) {
-    redirect(roleHomePath[session.user.role]);
-  }
+  if (session?.user?.role) redirect(roleHomePath[session.user.role]);
 
   const initialError =
     searchParams?.erro === "acesso-negado"
@@ -29,43 +23,36 @@ export default async function LoginPage({
             ? "Não foi possível autenticar. Verifique suas credenciais."
             : "";
 
+  const successMsg =
+    searchParams?.senha === "redefinida"
+      ? "Senha redefinida com sucesso! Faça login com a nova senha."
+      : searchParams?.verificado === "ok"
+        ? "E-mail confirmado! Faça login para continuar."
+        : searchParams?.cadastro === "ok"
+          ? "Conta criada! Verifique seu e-mail para confirmar o cadastro."
+          : "";
+
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center bg-slate-50 px-4 py-8">
-      <div className="mb-8 flex flex-col items-center gap-5 text-center">
-        <UnaspLogo className="max-h-24 max-w-64" priority />
-        <BrandMark />
+    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12" style={{ background: "#EEF2F7" }}>
+      <div className="w-full max-w-sm">
+        {/* Logo */}
+        <div className="mb-10 flex flex-col items-center text-center">
+          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-[22px] bg-blue-600 shadow-lg shadow-blue-600/30">
+            <Image src="/icon.svg" alt="ApexFit" width={48} height={48} />
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900">APEXFIT</h1>
+          <p className="mt-1 text-sm text-slate-500">Seu treino, seu progresso</p>
+        </div>
+
+        {/* Feedbacks */}
+        {successMsg && (
+          <div className="mb-4 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+            ✓ {successMsg}
+          </div>
+        )}
+
+        <LoginForm initialError={initialError} />
       </div>
-
-      {searchParams?.senha === "redefinida" ? (
-        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
-          ✓ Senha redefinida com sucesso! Faça login com a nova senha.
-        </div>
-      ) : null}
-
-      {searchParams?.verificado === "ok" ? (
-        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
-          ✓ E-mail confirmado com sucesso! Faça login para continuar.
-        </div>
-      ) : null}
-
-      {searchParams?.cadastro === "ok" ? (
-        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
-          ✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.
-        </div>
-      ) : null}
-
-      <Card className="shadow-md">
-        <CardHeader>
-          <Badge className="w-fit">Acesso seguro</Badge>
-          <CardTitle className="text-3xl">Entrar</CardTitle>
-          <CardDescription>
-            Acesse como Gerente, Professor ou Aluno para continuar seu acompanhamento na ApexFit.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LoginForm initialError={initialError} />
-        </CardContent>
-      </Card>
     </main>
   );
 }

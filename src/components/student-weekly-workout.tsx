@@ -1,12 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { CalendarDays, Dumbbell } from "lucide-react";
+import { useState, useCallback } from "react";
 import { ExerciseExecutionCard } from "@/components/exercise-execution-card";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn, diasDaSemana } from "@/lib/utils";
-import { diaPossuiTreino, resumoDiasTreino, selecionarIndiceSplitPorDia } from "@/lib/workout";
+import { selecionarIndiceSplitPorDia } from "@/lib/workout";
 
 type StudentWeeklyWorkoutProps = {
   plan: {
@@ -33,117 +30,98 @@ type StudentWeeklyWorkoutProps = {
 };
 
 export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutProps) {
-  const [selectedDayIndex, setSelectedDayIndex] = useState(todayIndex);
-  const selectedSplitIndex = selecionarIndiceSplitPorDia(plan.trainingDays, plan.splits.length, selectedDayIndex);
-  const selectedSplit = selectedSplitIndex !== null ? plan.splits[selectedSplitIndex] : null;
-  const selectedDay = diasDaSemana[selectedDayIndex] ?? diasDaSemana[0];
+  // Determina o split do dia de hoje
+  const todaySplitIndex = selecionarIndiceSplitPorDia(plan.trainingDays, plan.splits.length, todayIndex);
+  const [selectedSplitIndex, setSelectedSplitIndex] = useState(todaySplitIndex ?? 0);
 
-  const dayStatus = useMemo(
-    () => diasDaSemana.map((_, index) => diaPossuiTreino(plan.trainingDays, index)),
-    [plan.trainingDays]
-  );
+  const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
+
+  const handleCompletedChange = useCallback((exerciseId: string, completed: boolean) => {
+    setCompletedMap((prev) => ({ ...prev, [exerciseId]: completed }));
+  }, []);
+
+  const selectedSplit = plan.splits[selectedSplitIndex];
+  const today = diasDaSemana[todayIndex];
+  const isRestDay = todaySplitIndex === null;
+
+  const totalExercises = selectedSplit?.exercises.length ?? 0;
+  const completedCount = selectedSplit?.exercises.filter((e) => completedMap[e.id]).length ?? 0;
+  const progressPct = totalExercises > 0 ? (completedCount / totalExercises) * 100 : 0;
 
   return (
-    <section className="space-y-5">
-      <Card className="border-primary/30">
-        <CardContent className="pt-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <Badge>Plano ativo</Badge>
-              <h2 className="mt-3 text-2xl font-black text-slate-900">{plan.planName}</h2>
-              <p className="mt-1 text-sm text-slate-600">Professor: {plan.trainerName}</p>
-            </div>
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 text-primary">
-              <Dumbbell className="h-6 w-6" />
-            </div>
-          </div>
+    <div className="space-y-4">
+      {/* Chip do dia */}
+      <div className="flex items-center gap-2">
+        <span className={cn(
+          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold",
+          isRestDay
+            ? "bg-slate-100 text-slate-500"
+            : "bg-green-100 text-green-700"
+        )}>
+          <span className={cn("h-1.5 w-1.5 rounded-full", isRestDay ? "bg-slate-400" : "bg-green-500")} />
+          {today?.nome ?? "Hoje"} • {isRestDay ? "Descanso" : (selectedSplit?.splitName ?? "")}
+        </span>
+      </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <CalendarDays className="mb-2 h-4 w-4 text-primary" />
-              <p className="text-xs text-slate-600">Dias do plano</p>
-              <p className="mt-1 text-sm font-bold text-slate-900">{resumoDiasTreino(plan.trainingDays)}</p>
-            </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <Dumbbell className="mb-2 h-4 w-4 text-blue-700" />
-              <p className="text-xs text-slate-600">Divisão selecionada</p>
-              <p className="mt-1 text-sm font-bold text-slate-900">{selectedSplit?.splitName ?? "Descanso"}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Tabs de split */}
+      <div className="flex gap-2">
+        {plan.splits.map((split, index) => (
+          <button
+            key={split.id}
+            type="button"
+            onClick={() => setSelectedSplitIndex(index)}
+            className={cn(
+              "rounded-full px-4 py-2 text-sm font-bold transition-all",
+              selectedSplitIndex === index
+                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                : "bg-white text-slate-500 shadow-sm hover:bg-slate-50"
+            )}
+          >
+            {split.splitName}
+          </button>
+        ))}
+      </div>
 
-      <Card>
-        <CardContent className="pt-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-black text-slate-900">Agenda semanal</h2>
-              <p className="text-sm text-slate-600">Toque em um dia para ver o treino correspondente.</p>
-            </div>
-            <Badge variant="outline">{selectedDay.nome}</Badge>
-          </div>
-
-          <div className="grid grid-cols-7 gap-2">
-            {diasDaSemana.map((dia, index) => {
-              const isSelected = selectedDayIndex === index;
-              const hasWorkout = dayStatus[index];
-              const isToday = todayIndex === index;
-
-              return (
-                <button
-                  key={`${dia.nome}-${index}`}
-                  type="button"
-                  onClick={() => setSelectedDayIndex(index)}
-                  className={cn(
-                    "flex min-h-16 flex-col items-center justify-center rounded-2xl border px-1 text-center transition-all",
-                    isSelected
-                      ? "border-primary bg-primary text-white shadow-sm"
-                      : hasWorkout
-                        ? "border-primary/20 bg-blue-50 text-primary hover:border-primary/60"
-                        : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-                  )}
-                  aria-pressed={isSelected}
-                >
-                  <span className="text-base font-black">{dia.label}</span>
-                  <span className="mt-1 text-[10px] font-semibold leading-none">{isToday ? "Hoje" : hasWorkout ? "Treino" : "Off"}</span>
-                </button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {!selectedSplit ? (
-        <Card>
-          <CardContent className="pt-5">
-            <p className="font-semibold text-slate-900">{selectedDay.nome} é dia de descanso.</p>
-            <p className="mt-2 text-sm text-slate-600">Aproveite para recuperar, hidratar e preparar o próximo treino.</p>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {selectedSplit ? (
+      {/* Exercícios */}
+      {!selectedSplit || selectedSplit.exercises.length === 0 ? (
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <p className="text-sm font-semibold text-slate-700">
+            {isRestDay && selectedSplitIndex === (todaySplitIndex ?? -1)
+              ? "Hoje é dia de descanso. Aproveite para recuperar!"
+              : "Nenhum exercício cadastrado nesta divisão."}
+          </p>
+        </div>
+      ) : (
         <div className="space-y-3">
-          <div>
-            <h2 className="text-xl font-black text-slate-900">
-              {selectedSplit.splitName} • {selectedDay.nome}
-            </h2>
-            <p className="text-sm text-slate-600">Marque cada exercício concluído e informe a carga real.</p>
-          </div>
-
-          {selectedSplit.exercises.length === 0 ? (
-            <Card>
-              <CardContent className="pt-5">
-                <p className="text-sm text-slate-600">Nenhum exercício cadastrado nesta divisão.</p>
-              </CardContent>
-            </Card>
-          ) : null}
-
           {selectedSplit.exercises.map((exercise) => (
-            <ExerciseExecutionCard key={exercise.id} exercise={exercise} lastLoad={exercise.lastLoad} videoUrl={exercise.videoUrl} />
+            <ExerciseExecutionCard
+              key={exercise.id}
+              exercise={exercise}
+              lastLoad={exercise.lastLoad}
+              videoUrl={exercise.videoUrl}
+              onCompletedChange={(completed) => handleCompletedChange(exercise.id, completed)}
+            />
           ))}
         </div>
-      ) : null}
-    </section>
+      )}
+
+      {/* Barra de progresso */}
+      {totalExercises > 0 && (
+        <div className="rounded-2xl bg-green-500 p-4 shadow-md shadow-green-500/25">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-sm font-bold text-white">Progresso do Treino</span>
+            <span className="text-sm font-bold text-white">
+              {completedCount}/{totalExercises}
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-green-400/50">
+            <div
+              className="h-full rounded-full bg-white transition-all duration-300"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

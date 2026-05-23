@@ -35,8 +35,8 @@
   }
 
   body {
-    @apply min-h-screen bg-slate-50 text-slate-900 antialiased;
-    background: #f8fafc;
+    @apply min-h-screen text-slate-900 antialiased;
+    background: #EEF2F7;
   }
 }
 
