@@ -10,7 +10,7 @@ import { authOptions, roleHomePath } from "@/lib/auth";
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams?: { erro?: string; error?: string; cadastro?: string };
+  searchParams?: { erro?: string; error?: string; cadastro?: string; verificado?: string };
 }) {
   const session = await getServerSession(authOptions);
 
@@ -21,9 +21,13 @@ export default async function LoginPage({
   const initialError =
     searchParams?.erro === "acesso-negado"
       ? "Acesso negado para esta área. Entre com o perfil correto."
-      : searchParams?.error
-        ? "Não foi possível autenticar. Verifique suas credenciais."
-        : "";
+      : searchParams?.erro === "token-invalido"
+        ? "Link de verificação inválido. Solicite um novo e-mail."
+        : searchParams?.erro === "token-expirado"
+          ? "Link de verificação expirado. Solicite um novo e-mail após entrar."
+          : searchParams?.error
+            ? "Não foi possível autenticar. Verifique suas credenciais."
+            : "";
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center bg-slate-50 px-4 py-8">
@@ -32,9 +36,15 @@ export default async function LoginPage({
         <BrandMark />
       </div>
 
+      {searchParams?.verificado === "ok" ? (
+        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+          ✓ E-mail confirmado com sucesso! Faça login para continuar.
+        </div>
+      ) : null}
+
       {searchParams?.cadastro === "ok" ? (
         <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
-          ✓ Conta criada com sucesso! Faça login para continuar.
+          ✓ Conta criada! Verifique seu e-mail para confirmar o cadastro.
         </div>
       ) : null}
 

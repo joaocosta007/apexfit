@@ -10,6 +10,27 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { diasDaSemana } from "@/lib/utils";
+import { sendVerificationEmail } from "@/lib/email";
+
+async function criarTokenVerificacaoEEnviarEmail(
+  userId: string,
+  email: string,
+  name: string
+) {
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+
+  const record = await prisma.emailVerificationToken.create({
+    data: {
+      userId,
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24h
+    }
+  });
+
+  const verifyUrl = `${protocol}://${host}/api/verify-email?token=${record.token}`;
+  await sendVerificationEmail(email, name, verifyUrl).catch(console.error);
+}
 
 const studentSchema = z.object({
   name: z.string().min(3, "Informe o nome completo."),
@@ -418,10 +439,13 @@ export async function registrarAlunoComConviteAction(token: string, formData: Fo
 
   const passwordHash = await bcrypt.hash(parsed.password, 10);
 
+  let newStudentId: string | null = null;
+
   await prisma.$transaction(async (tx) => {
     const student = await tx.user.create({
       data: { name: parsed.name, email: parsed.email, passwordHash, role: Role.STUDENT }
     });
+    newStudentId = student.id;
     await tx.studentTrainer.create({
       data: { studentId: student.id, trainerId: invite.trainer.id }
     });
@@ -430,6 +454,10 @@ export async function registrarAlunoComConviteAction(token: string, formData: Fo
       data: { used: true }
     });
   });
+
+  if (newStudentId) {
+    await criarTokenVerificacaoEEnviarEmail(newStudentId, parsed.email, parsed.name);
+  }
 
   redirect("/login?cadastro=ok");
 }

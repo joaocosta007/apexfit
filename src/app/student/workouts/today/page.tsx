@@ -1,5 +1,6 @@
 import { Role } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
+import { EmailVerificationBanner } from "@/components/email-verification-banner";
 import { PushSubscriber } from "@/components/push-subscriber";
 import { StudentBottomNav } from "@/components/student-bottom-nav";
 import { StudentWeeklyWorkout } from "@/components/student-weekly-workout";
@@ -11,6 +12,12 @@ import { findExerciseByCatalogId, findExerciseByName } from "@/lib/exercise-cata
 
 export default async function StudentWorkoutTodayPage() {
   const session = await requireRole(Role.STUDENT);
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { emailVerified: true }
+  });
+  const emailVerified = !!currentUser?.emailVerified;
 
   const plan = await prisma.workoutPlan.findFirst({
     where: {
@@ -73,6 +80,8 @@ export default async function StudentWorkoutTodayPage() {
       title="Treino de Hoje"
       subtitle={`${diasDaSemana[todayIndex]?.nome ?? "Hoje"} • execute, marque como feito e registre a carga real.`}
     >
+      {!emailVerified && <EmailVerificationBanner />}
+
       {!plan ? (
         <Card>
           <CardContent className="pt-5">
