@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -46,7 +47,15 @@ export function LoginForm({ initialError }: { initialError?: string }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Senha</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Senha</Label>
+          <Link
+            href="/forgot-password"
+            className="text-xs text-slate-500 hover:text-primary hover:underline"
+          >
+            Esqueci minha senha
+          </Link>
+        </div>
         <Input id="password" name="password" type="password" placeholder="Digite sua senha" autoComplete="current-password" required />
       </div>
 

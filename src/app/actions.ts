@@ -10,7 +10,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { diasDaSemana } from "@/lib/utils";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendVerificationEmail, sendPasswordResetEmail } from "@/lib/email";
 
 async function criarTokenVerificacaoEEnviarEmail(
   userId: string,
@@ -571,4 +571,55 @@ export async function registrarTreinoAction(exerciseId: string, formData: FormDa
   });
 
   revalidatePath("/student/workouts/today");
+}
+
+export async function solicitarRecuperacaoSenhaAction(formData: FormData) {
+  const email = campoTexto(formData, "email").toLowerCase();
+
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  // Não revela se o e-mail existe ou não (segurança)
+  if (user) {
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
+
+    const record = await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000) // 1 hora
+      }
+    });
+
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "localhost:3000";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const resetUrl = `${protocol}://${host}/reset-password?token=${record.token}`;
+
+    await sendPasswordResetEmail(user.email, user.name, resetUrl).catch(console.error);
+  }
+
+  redirect("/forgot-password?enviado=ok");
+}
+
+export async function redefinirSenhaAction(token: string, formData: FormData) {
+  const password = z.string().min(6, "A senha deve ter pelo menos 6 caracteres.").parse(
+    campoTexto(formData, "password")
+  );
+
+  const record = await prisma.passwordResetToken.findUnique({ where: { token } });
+
+  if (!record || record.expiresAt < new Date()) {
+    throw new Error("Link de recuperação inválido ou expirado.");
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: record.userId },
+      data: { passwordHash }
+    }),
+    prisma.passwordResetToken.delete({ where: { token } })
+  ]);
+
+  redirect("/login?senha=redefinida");
 }
