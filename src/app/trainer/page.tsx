@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { Role } from "@prisma/client";
-import { AlertTriangle, ChevronRight, Dumbbell, Link2, UsersRound } from "lucide-react";
-import { gerarLinkCadastroAction } from "@/app/actions";
+import { AlertTriangle, Bell, ChevronRight, Dumbbell, Link2, UsersRound } from "lucide-react";
+import { enviarLembreteAction, gerarLinkCadastroAction } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
 import { FAB } from "@/components/fab";
@@ -211,7 +211,20 @@ export default async function TrainerDashboardPage({ searchParams }: TrainerPage
                       <Badge variant="outline">{resumoDiasTreino(plan?.trainingDays)}</Badge>
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 flex-shrink-0 text-slate-400" />
+                  <div className="flex flex-shrink-0 items-center gap-1">
+                    {status === "danger" && dias !== null && (
+                      <form action={enviarLembreteAction.bind(null, student.id, dias)} onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="submit"
+                          title="Enviar lembrete por push"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-500 transition-colors hover:bg-red-100"
+                        >
+                          <Bell className="h-4 w-4" />
+                        </button>
+                      </form>
+                    )}
+                    <ChevronRight className="h-5 w-5 text-slate-400" />
+                  </div>
                 </CardContent>
               </Card>
             </Link>

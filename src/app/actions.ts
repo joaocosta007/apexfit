@@ -342,6 +342,43 @@ export async function removerExercicioAction(exerciseId: string, studentId: stri
   revalidatePath(`/trainer/workouts/${studentId}`);
 }
 
+export async function enviarLembreteAction(studentId: string, dias: number) {
+  const session = await requireRole(Role.TRAINER);
+  await garantirAlunoDoProfessor(studentId, session.user.id);
+
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { userId: studentId }
+  });
+
+  if (subscriptions.length === 0) return;
+
+  const webpush = (await import("web-push")).default;
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
+
+  const payload = JSON.stringify({
+    title: "Hora de treinar! 💪",
+    body:  `Você está há ${dias} dia${dias === 1 ? "" : "s"} sem treinar. Que tal voltar hoje?`,
+    url:   "/student/workouts/today"
+  });
+
+  for (const sub of subscriptions) {
+    try {
+      await webpush.sendNotification(
+        sub.subscription as unknown as Parameters<typeof webpush.sendNotification>[0],
+        payload
+      );
+    } catch (err: unknown) {
+      if ((err as { statusCode?: number }).statusCode === 410) {
+        await prisma.pushSubscription.delete({ where: { id: sub.id } });
+      }
+    }
+  }
+}
+
 export async function gerarLinkCadastroAction() {
   const session = await requireRole(Role.TRAINER);
 

@@ -36,6 +36,7 @@ model User {
   studentAssessments PhysicalAssessment[]  @relation("StudentAssessments")
   trainerAssessments PhysicalAssessment[]  @relation("TrainerAssessments")
   inviteTokens       InviteToken[]
+  pushSubscriptions  PushSubscription[]
 
   @@index([role])
   @@map("users")
@@ -162,4 +163,18 @@ model InviteToken {
 
   @@index([token])
   @@map("invite_tokens")
+}
+
+model PushSubscription {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  endpoint     String
+  subscription Json
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint])
+  @@index([userId])
+  @@map("push_subscriptions")
 }
