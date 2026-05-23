@@ -44,6 +44,7 @@ export default async function StudentAnamnesePage({
     <AppShell
       title="Anamnese"
       subtitle="Informe seu histórico de saúde para que seu professor monte o plano ideal."
+      variant="student"
       action={
         <Button asChild variant="outline" size="icon">
           <Link href="/student/dashboard" aria-label="Voltar">

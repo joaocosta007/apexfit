@@ -13,12 +13,15 @@ export function AppShell({ title, subtitle, children, action, variant = "default
   if (variant === "student") {
     return (
       <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-4 pb-28 pt-8" style={{ background: "#EEF2F7" }}>
-        <div className="mb-6 flex items-end justify-between gap-4">
+        <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
             {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
           </div>
-          {action}
+          <div className="flex flex-shrink-0 items-center gap-2">
+            {action}
+            <LogoutButton />
+          </div>
         </div>
         {children}
       </main>
