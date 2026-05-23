@@ -1,6 +1,7 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PlanType, Role } from "@prisma/client";
@@ -339,6 +340,61 @@ export async function removerExercicioAction(exerciseId: string, studentId: stri
   });
 
   revalidatePath(`/trainer/workouts/${studentId}`);
+}
+
+export async function gerarLinkCadastroAction() {
+  const session = await requireRole(Role.TRAINER);
+
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "localhost:3000";
+  const protocol = host.includes("localhost") ? "http" : "https";
+  const baseUrl = `${protocol}://${host}`;
+
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 dias
+
+  const invite = await prisma.inviteToken.create({
+    data: { trainerId: session.user.id, expiresAt }
+  });
+
+  revalidatePath("/trainer");
+  redirect(`/trainer?invite=${invite.token}`);
+}
+
+export async function registrarAlunoComConviteAction(token: string, formData: FormData) {
+  const invite = await prisma.inviteToken.findUnique({
+    where: { token },
+    include: { trainer: { select: { id: true } } }
+  });
+
+  if (!invite || invite.used || invite.expiresAt < new Date()) {
+    throw new Error("Link de cadastro inválido ou expirado.");
+  }
+
+  const parsed = studentSchema.parse({
+    name: campoTexto(formData, "name"),
+    email: campoTexto(formData, "email").toLowerCase(),
+    password: campoTexto(formData, "password")
+  });
+
+  const existing = await prisma.user.findUnique({ where: { email: parsed.email } });
+  if (existing) throw new Error("E-mail já cadastrado.");
+
+  const passwordHash = await bcrypt.hash(parsed.password, 10);
+
+  await prisma.$transaction(async (tx) => {
+    const student = await tx.user.create({
+      data: { name: parsed.name, email: parsed.email, passwordHash, role: Role.STUDENT }
+    });
+    await tx.studentTrainer.create({
+      data: { studentId: student.id, trainerId: invite.trainer.id }
+    });
+    await tx.inviteToken.update({
+      where: { id: invite.id },
+      data: { used: true }
+    });
+  });
+
+  redirect("/login?cadastro=ok");
 }
 
 export async function salvarAvaliacaoAction(studentId: string, formData: FormData) {

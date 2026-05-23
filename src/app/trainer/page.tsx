@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { Role } from "@prisma/client";
-import { AlertTriangle, ChevronRight, Dumbbell, UsersRound } from "lucide-react";
+import { AlertTriangle, ChevronRight, Dumbbell, Link2, UsersRound } from "lucide-react";
+import { gerarLinkCadastroAction } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
+import { CopyButton } from "@/components/copy-button";
 import { FAB } from "@/components/fab";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -42,8 +46,13 @@ const statusOrder: Record<Status, number> = { danger: 0, warning: 1, active: 2 }
 
 // ─── page ───────────────────────────────────────────────────────────────────
 
-export default async function TrainerDashboardPage() {
+type TrainerPageProps = {
+  searchParams: Promise<{ invite?: string }>;
+};
+
+export default async function TrainerDashboardPage({ searchParams }: TrainerPageProps) {
   const session = await requireRole(Role.TRAINER);
+  const { invite: inviteToken } = await searchParams;
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -89,12 +98,55 @@ export default async function TrainerDashboardPage() {
     })
     .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
 
-  const totalAlunos      = students.length;
-  const treinosSemana    = students.filter((s) => s.weekCount > 0).length;
-  const emRisco          = students.filter((s) => s.status === "danger").length;
+  const totalAlunos   = students.length;
+  const treinosSemana = students.filter((s) => s.weekCount > 0).length;
+  const emRisco       = students.filter((s) => s.status === "danger").length;
+
+  // Construir URL do link de convite gerado (vem via searchParams após redirect)
+  let inviteUrl: string | null = null;
+  if (inviteToken) {
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "localhost:3000";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    inviteUrl = `${protocol}://${host}/cadastro/${inviteToken}`;
+  }
 
   return (
     <AppShell title="Painel do Professor" subtitle="Gerencie alunos, planos e acompanhe a frequência de treinos.">
+      {/* ── link de convite ── */}
+      <Card className="mb-4">
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="font-bold text-slate-900">Link de cadastro</p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                Gere e envie para o aluno se cadastrar sozinho.
+              </p>
+            </div>
+            <form action={gerarLinkCadastroAction}>
+              <Button type="submit" size="sm" variant="outline">
+                <Link2 className="mr-1.5 h-4 w-4" />
+                Gerar link
+              </Button>
+            </form>
+          </div>
+
+          {inviteUrl ? (
+            <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-3">
+              <p className="mb-2 text-xs font-semibold text-green-700">
+                ✓ Link gerado — válido por 7 dias. Envie para o aluno.
+              </p>
+              <div className="flex items-center gap-2">
+                <p className="min-w-0 flex-1 truncate rounded-lg border border-green-200 bg-white px-2.5 py-1.5 font-mono text-xs text-slate-700">
+                  {inviteUrl}
+                </p>
+                <CopyButton text={inviteUrl} />
+              </div>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
       {/* ── cards de resumo ── */}
       <div className="mb-4 grid grid-cols-3 gap-3">
         <Card>

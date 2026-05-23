@@ -10,7 +10,7 @@ import { authOptions, roleHomePath } from "@/lib/auth";
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams?: { erro?: string; error?: string };
+  searchParams?: { erro?: string; error?: string; cadastro?: string };
 }) {
   const session = await getServerSession(authOptions);
 
@@ -31,6 +31,12 @@ export default async function LoginPage({
         <UnaspLogo className="max-h-24 max-w-64" priority />
         <BrandMark />
       </div>
+
+      {searchParams?.cadastro === "ok" ? (
+        <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+          ✓ Conta criada com sucesso! Faça login para continuar.
+        </div>
+      ) : null}
 
       <Card className="shadow-md">
         <CardHeader>
