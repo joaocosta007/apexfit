@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Role } from "@prisma/client";
 import { ArrowLeft, CalendarDays, Dumbbell } from "lucide-react";
+import { removerProfessorAction } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
+import { ConfirmButton } from "@/components/confirm-button";
 import { SparklinePlaceholder } from "@/components/sparkline-placeholder";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,6 +69,7 @@ export default async function TrainerMonitoringPage({ params }: TrainerMonitorin
     >
       <section className="space-y-4">
         {trainer.trainerStudents.map(({ student }) => {
+
           const plan = student.studentPlans[0];
           const totalExercises = plan?.splits.reduce((total, split) => total + split.exercises.length, 0) ?? 0;
 
@@ -101,6 +104,21 @@ export default async function TrainerMonitoringPage({ params }: TrainerMonitorin
             </Card>
           );
         })}
+
+        <Card className="border-red-100">
+          <CardContent className="pt-5">
+            <h3 className="mb-1 font-bold text-slate-900">Zona de perigo</h3>
+            <p className="mb-4 text-sm text-slate-500">
+              Remover o professor irá excluir a conta e desvincular todos os alunos associados a ele. Esta ação não pode ser desfeita.
+            </p>
+            <ConfirmButton
+              action={removerProfessorAction.bind(null, trainer.id)}
+              message={`Tem certeza que deseja remover o professor ${trainer.name}? Todos os alunos serão desvinculados e os planos de treino serão excluídos.`}
+              label="Remover professor"
+              variant="destructive"
+            />
+          </CardContent>
+        </Card>
       </section>
     </AppShell>
   );

@@ -473,6 +473,46 @@ export async function salvarAvaliacaoAction(studentId: string, formData: FormDat
   revalidatePath("/student/assessments");
 }
 
+export async function removerAlunoAction(studentId: string) {
+  const session = await requireRole(Role.TRAINER);
+  await garantirAlunoDoProfessor(studentId, session.user.id);
+
+  // Remove plano ativo e suas divisões/exercícios (cascade via Prisma)
+  await prisma.workoutPlan.deleteMany({
+    where: { studentId, trainerId: session.user.id }
+  });
+
+  // Remove vínculo professor-aluno
+  await prisma.studentTrainer.delete({
+    where: {
+      studentId_trainerId: {
+        studentId,
+        trainerId: session.user.id
+      }
+    }
+  });
+
+  revalidatePath("/trainer");
+  redirect("/trainer");
+}
+
+export async function removerProfessorAction(trainerId: string) {
+  await requireRole(Role.MANAGER);
+
+  const trainer = await prisma.user.findFirst({
+    where: { id: trainerId, role: Role.TRAINER }
+  });
+
+  if (!trainer) {
+    throw new Error("Professor não encontrado.");
+  }
+
+  await prisma.user.delete({ where: { id: trainerId } });
+
+  revalidatePath("/manager");
+  redirect("/manager");
+}
+
 export async function registrarTreinoAction(exerciseId: string, formData: FormData) {
   const session = await requireRole(Role.STUDENT);
   const completedLoadKg = z.coerce.number().min(0).max(1000).parse(campoTexto(formData, "completedLoadKg"));

@@ -5,12 +5,14 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import {
   adicionarDivisaoAction,
   adicionarExercicioAction,
+  removerAlunoAction,
   removerDivisaoAction,
   removerExercicioAction,
   salvarAvaliacaoAction,
   salvarPlanoTreinoAction
 } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
+import { ConfirmButton } from "@/components/confirm-button";
 import { DayToggleFields } from "@/components/day-toggle-fields";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -71,6 +73,7 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
   const plan = student.studentPlans[0];
   const salvarPlano = salvarPlanoTreinoAction.bind(null, student.id);
   const salvarAvaliacao = salvarAvaliacaoAction.bind(null, student.id);
+  const removerAluno = removerAlunoAction.bind(null, student.id);
 
   const assessments = await prisma.physicalAssessment.findMany({
     where: { studentId: student.id },
@@ -406,6 +409,20 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
                 ))}
               </div>
             ) : null}
+          </CardContent>
+        </Card>
+        <Card className="border-red-100">
+          <CardContent className="pt-5">
+            <h3 className="mb-1 font-bold text-slate-900">Zona de perigo</h3>
+            <p className="mb-4 text-sm text-slate-500">
+              Remover o aluno irá desvincular ele da sua conta e excluir o plano de treino cadastrado. O aluno poderá ser adicionado novamente por outro professor.
+            </p>
+            <ConfirmButton
+              action={removerAluno}
+              message={`Tem certeza que deseja remover ${student.name}? Esta ação irá excluir o plano de treino e desvincular o aluno.`}
+              label="Remover aluno"
+              variant="destructive"
+            />
           </CardContent>
         </Card>
       </section>
