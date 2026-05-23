@@ -456,7 +456,12 @@ export async function registrarAlunoComConviteAction(token: string, formData: Fo
   });
 
   if (newStudentId) {
-    await criarTokenVerificacaoEEnviarEmail(newStudentId, parsed.email, parsed.name);
+    try {
+      await criarTokenVerificacaoEEnviarEmail(newStudentId, parsed.email, parsed.name);
+    } catch (err) {
+      console.error("Erro ao enviar e-mail de verificação:", err);
+      // Não bloqueia o cadastro — o aluno é redirecionado normalmente
+    }
   }
 
   redirect("/login?cadastro=ok");
