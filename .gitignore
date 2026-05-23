@@ -25,3 +25,4 @@ Thumbs.db
 
 # prisma local
 prisma/dev.db
+.vercel
