@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, Dumbbell, TrendingUp } from "lucide-react";
+import { ClipboardList, Dumbbell, LayoutDashboard, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type StudentBottomNavProps = {
-  active: "workout" | "progress" | "assessments";
+  active: "dashboard" | "workout" | "progress" | "assessments";
 };
 
 const items = [
-  { href: "/student/workouts/today", icon: Dumbbell,       label: "Treino",    key: "workout"     },
-  { href: "/student/progress",       icon: TrendingUp,     label: "Evolução",  key: "progress"    },
-  { href: "/student/assessments",    icon: ClipboardList,  label: "Avaliação", key: "assessments" },
+  { href: "/student/dashboard",      icon: LayoutDashboard, label: "Início",   key: "dashboard"   },
+  { href: "/student/workouts/today", icon: Dumbbell,        label: "Treino",   key: "workout"     },
+  { href: "/student/progress",       icon: TrendingUp,      label: "Evolução", key: "progress"    },
+  { href: "/student/assessments",    icon: ClipboardList,   label: "Avaliação",key: "assessments" },
 ] as const;
 
 export function StudentBottomNav({ active }: StudentBottomNavProps) {

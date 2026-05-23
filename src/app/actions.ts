@@ -623,3 +623,42 @@ export async function redefinirSenhaAction(token: string, formData: FormData) {
 
   redirect("/login?senha=redefinida");
 }
+
+export async function salvarAnamneseAction(formData: FormData) {
+  const session = await requireRole(Role.STUDENT);
+
+  function optInt(campo: string): number | null {
+    const val = campoTexto(formData, campo);
+    if (!val) return null;
+    const n = parseInt(val, 10);
+    return isNaN(n) ? null : n;
+  }
+
+  function optFloat(campo: string): number | null {
+    const val = campoTexto(formData, campo);
+    if (!val) return null;
+    const n = parseFloat(val);
+    return isNaN(n) ? null : n;
+  }
+
+  const data = {
+    age:              optInt("age"),
+    heightCm:         optFloat("heightCm"),
+    goal:             campoTexto(formData, "goal") || null,
+    activityLevel:    campoTexto(formData, "activityLevel") || null,
+    healthConditions: campoTexto(formData, "healthConditions") || null,
+    injuries:         campoTexto(formData, "injuries") || null,
+    medications:      campoTexto(formData, "medications") || null,
+    observations:     campoTexto(formData, "observations") || null,
+  };
+
+  await prisma.anamnese.upsert({
+    where:  { studentId: session.user.id },
+    create: { studentId: session.user.id, ...data },
+    update: data,
+  });
+
+  revalidatePath("/student/anamnese");
+  revalidatePath("/student/dashboard");
+  redirect("/student/anamnese?salvo=ok");
+}

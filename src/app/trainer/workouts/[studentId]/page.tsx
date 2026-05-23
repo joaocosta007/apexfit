@@ -75,10 +75,13 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
   const salvarAvaliacao = salvarAvaliacaoAction.bind(null, student.id);
   const removerAluno = removerAlunoAction.bind(null, student.id);
 
-  const assessments = await prisma.physicalAssessment.findMany({
-    where: { studentId: student.id },
-    orderBy: { date: "desc" }
-  });
+  const [assessments, anamnese] = await Promise.all([
+    prisma.physicalAssessment.findMany({
+      where: { studentId: student.id },
+      orderBy: { date: "desc" }
+    }),
+    prisma.anamnese.findUnique({ where: { studentId: student.id } })
+  ]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -411,6 +414,69 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
             ) : null}
           </CardContent>
         </Card>
+        {/* ── anamnese ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Anamnese</CardTitle>
+            <CardDescription>Informações de saúde e objetivos do aluno.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {!anamnese ? (
+              <p className="text-sm text-slate-500">
+                O aluno ainda não preencheu a anamnese. Peça para ele acessar{" "}
+                <strong>Início → Preencher anamnese</strong> no aplicativo.
+              </p>
+            ) : (
+              <div className="space-y-3 text-sm">
+                {(anamnese.age || anamnese.heightCm) && (
+                  <div className="flex gap-6">
+                    {anamnese.age     && <span className="text-slate-600">Idade: <strong className="text-slate-900">{anamnese.age} anos</strong></span>}
+                    {anamnese.heightCm && <span className="text-slate-600">Altura: <strong className="text-slate-900">{anamnese.heightCm} cm</strong></span>}
+                  </div>
+                )}
+                {anamnese.goal && (
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Objetivo</span>
+                    <p className="mt-0.5 font-semibold text-slate-900">{anamnese.goal}</p>
+                  </div>
+                )}
+                {anamnese.activityLevel && (
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Nível de atividade</span>
+                    <p className="mt-0.5 font-semibold text-slate-900">
+                      {{ sedentary: "Sedentário", light: "Levemente ativo", moderate: "Moderadamente ativo", very: "Muito ativo" }[anamnese.activityLevel] ?? anamnese.activityLevel}
+                    </p>
+                  </div>
+                )}
+                {anamnese.healthConditions && (
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Condições de saúde</span>
+                    <p className="mt-0.5 text-slate-700">{anamnese.healthConditions}</p>
+                  </div>
+                )}
+                {anamnese.injuries && (
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Lesões / restrições</span>
+                    <p className="mt-0.5 text-slate-700">{anamnese.injuries}</p>
+                  </div>
+                )}
+                {anamnese.medications && (
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Medicamentos</span>
+                    <p className="mt-0.5 text-slate-700">{anamnese.medications}</p>
+                  </div>
+                )}
+                {anamnese.observations && (
+                  <div>
+                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">Observações</span>
+                    <p className="mt-0.5 italic text-slate-600">{anamnese.observations}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="border-red-100">
           <CardContent className="pt-5">
             <h3 className="mb-1 font-bold text-slate-900">Zona de perigo</h3>
