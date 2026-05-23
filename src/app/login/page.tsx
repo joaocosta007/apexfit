@@ -38,22 +38,21 @@ export default async function LoginPage({
         {/* Cabeçalho institucional */}
         <div className="mb-8 flex flex-col items-center gap-5">
 
-          {/* Logos CENAPE + UNASP */}
-          <div className="flex items-center gap-4">
+          {/* Logos CENAPE + UNASP empilhados */}
+          <div className="flex flex-col items-center gap-2">
             <Image
               src="/cenape.png"
               alt="CENAPE"
-              width={130}
-              height={52}
-              className="h-13 w-auto object-contain"
+              width={140}
+              height={56}
+              className="h-14 w-auto object-contain"
             />
-            <div className="h-8 w-px bg-slate-300" />
             <Image
               src="/unasp-logo.png"
               alt="UNASP"
-              width={56}
-              height={28}
-              className="h-7 w-auto object-contain opacity-70"
+              width={60}
+              height={24}
+              className="h-6 w-auto object-contain opacity-60"
             />
           </div>
 
