@@ -43,25 +43,18 @@ export default async function LoginPage({
             <Image
               src="/cenape.png"
               alt="CENAPE"
-              width={90}
-              height={36}
-              className="h-9 w-auto object-contain opacity-80"
+              width={130}
+              height={52}
+              className="h-13 w-auto object-contain"
             />
             <div className="h-8 w-px bg-slate-300" />
             <Image
               src="/unasp-logo.png"
               alt="UNASP"
-              width={90}
-              height={36}
-              className="h-9 w-auto object-contain opacity-80"
+              width={56}
+              height={28}
+              className="h-7 w-auto object-contain opacity-70"
             />
-          </div>
-
-          {/* Divisor com texto */}
-          <div className="flex w-full items-center gap-3">
-            <div className="h-px flex-1 bg-slate-200" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">apresenta</span>
-            <div className="h-px flex-1 bg-slate-200" />
           </div>
 
           {/* ApexFit */}
