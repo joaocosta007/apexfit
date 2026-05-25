@@ -37,6 +37,7 @@ export default async function StudentProgressPage() {
       title="Evolução de Carga"
       subtitle="Acompanhe seu progresso ao longo do tempo"
       variant="student"
+      bottomNav={<StudentBottomNav active="progress" />}
     >
       {exercises.length === 0 ? (
         <div className="rounded-2xl bg-white p-5 shadow-sm">
@@ -49,7 +50,6 @@ export default async function StudentProgressPage() {
         <LoadEvolutionChart exercises={exercises} />
       )}
 
-      <StudentBottomNav active="progress" />
     </AppShell>
   );
 }

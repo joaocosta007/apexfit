@@ -7,24 +7,38 @@ type AppShellProps = {
   children: React.ReactNode;
   action?: React.ReactNode;
   variant?: "default" | "student";
+  bottomNav?: React.ReactNode;
 };
 
-export function AppShell({ title, subtitle, children, action, variant = "default" }: AppShellProps) {
+export function AppShell({ title, subtitle, children, action, variant = "default", bottomNav }: AppShellProps) {
   if (variant === "student") {
     return (
-      <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col px-4 pb-28 pt-8" style={{ background: "#EEF2F7" }}>
-        <div className="mb-6 flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
-            {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
-          </div>
-          <div className="flex flex-shrink-0 items-center gap-2">
-            {action}
-            <LogoutButton />
+      <div
+        className="mx-auto flex w-full max-w-lg flex-col"
+        style={{ background: "#EEF2F7", height: "100dvh" }}
+      >
+        {/* Cabeçalho fixo no topo */}
+        <div className="flex-shrink-0 px-4 pb-3 pt-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
+              {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-2">
+              {action}
+              <LogoutButton />
+            </div>
           </div>
         </div>
-        {children}
-      </main>
+
+        {/* Conteúdo com scroll */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
+          {children}
+        </div>
+
+        {/* Nav sempre visível no rodapé */}
+        {bottomNav}
+      </div>
     );
   }
 

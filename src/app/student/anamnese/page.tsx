@@ -209,7 +209,6 @@ export default async function StudentAnamnesePage({
         </Button>
       </form>
 
-      <StudentBottomNav active="dashboard" />
     </AppShell>
   );
 }

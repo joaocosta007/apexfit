@@ -76,7 +76,7 @@ export default async function StudentWorkoutTodayPage() {
     : null;
 
   return (
-    <AppShell title="Treino de Hoje" variant="student">
+    <AppShell title="Treino de Hoje" variant="student" bottomNav={<StudentBottomNav active="workout" />}>
       {!emailVerified && <EmailVerificationBanner />}
 
       {!plan ? (
@@ -89,7 +89,6 @@ export default async function StudentWorkoutTodayPage() {
       {serializedPlan ? <StudentWeeklyWorkout plan={serializedPlan} todayIndex={todayIndex} /> : null}
 
       <PushSubscriber />
-      <StudentBottomNav active="workout" />
     </AppShell>
   );
 }

@@ -46,6 +46,7 @@ export default async function StudentAssessmentsPage() {
       title="Avaliação Física"
       subtitle="Acompanhe suas medidas corporais"
       variant="student"
+      bottomNav={<StudentBottomNav active="assessments" />}
     >
       {!latest ? (
         <div className="rounded-2xl bg-white p-5 shadow-sm">
@@ -162,7 +163,6 @@ export default async function StudentAssessmentsPage() {
         </div>
       )}
 
-      <StudentBottomNav active="assessments" />
     </AppShell>
   );
 }

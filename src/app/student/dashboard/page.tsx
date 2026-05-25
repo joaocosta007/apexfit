@@ -71,6 +71,7 @@ export default async function StudentDashboardPage() {
       title={`Olá, ${firstName}! 👋`}
       subtitle="Pronto para treinar hoje?"
       variant="student"
+      bottomNav={<StudentBottomNav active="dashboard" />}
     >
       {/* Stats */}
       <div className="mb-4 grid grid-cols-3 gap-3">
@@ -168,7 +169,6 @@ export default async function StudentDashboardPage() {
         </Link>
       )}
 
-      <StudentBottomNav active="dashboard" />
     </AppShell>
   );
 }
