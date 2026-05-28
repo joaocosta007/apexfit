@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { ExerciseExecutionCard } from "@/components/exercise-execution-card";
 import { cn, diasDaSemana } from "@/lib/utils";
-import { selecionarIndiceSplitPorDia } from "@/lib/workout";
+import { normalizarDiasTreino, selecionarIndiceSplitPorDia } from "@/lib/workout";
 
 type StudentWeeklyWorkoutProps = {
   plan: {
@@ -29,11 +29,17 @@ type StudentWeeklyWorkoutProps = {
   todayIndex: number;
 };
 
+/** Retorna os nomes curtos dos dias associados a um split (ex: ["Seg", "Qui"]) */
+function diasDoSplit(trainingDays: unknown, splitIndex: number, splitCount: number): string[] {
+  const dias = normalizarDiasTreino(trainingDays);
+  return dias
+    .filter((_, pos) => pos % splitCount === splitIndex)
+    .map((dia) => dia.nome.slice(0, 3));
+}
+
 export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutProps) {
-  // Determina o split do dia de hoje
   const todaySplitIndex = selecionarIndiceSplitPorDia(plan.trainingDays, plan.splits.length, todayIndex);
   const [selectedSplitIndex, setSelectedSplitIndex] = useState(todaySplitIndex ?? 0);
-
   const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
 
   const handleCompletedChange = useCallback((exerciseId: string, completed: boolean) => {
@@ -54,32 +60,48 @@ export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutP
       <div className="flex items-center gap-2">
         <span className={cn(
           "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold",
-          isRestDay
-            ? "bg-slate-100 text-slate-500"
-            : "bg-green-100 text-green-700"
+          isRestDay ? "bg-slate-100 text-slate-500" : "bg-green-100 text-green-700"
         )}>
           <span className={cn("h-1.5 w-1.5 rounded-full", isRestDay ? "bg-slate-400" : "bg-green-500")} />
           {today?.nome ?? "Hoje"} • {isRestDay ? "Descanso" : (selectedSplit?.splitName ?? "")}
         </span>
       </div>
 
-      {/* Tabs de split */}
-      <div className="flex gap-2">
-        {plan.splits.map((split, index) => (
-          <button
-            key={split.id}
-            type="button"
-            onClick={() => setSelectedSplitIndex(index)}
-            className={cn(
-              "rounded-full px-4 py-2 text-sm font-bold transition-all",
-              selectedSplitIndex === index
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-                : "bg-white text-slate-500 shadow-sm hover:bg-slate-50"
-            )}
-          >
-            {split.splitName}
-          </button>
-        ))}
+      {/* Abas com dias da semana */}
+      <div className="flex flex-wrap gap-2">
+        {plan.splits.map((split, index) => {
+          const dias = diasDoSplit(plan.trainingDays, index, plan.splits.length);
+          const isSelected = selectedSplitIndex === index;
+          const isToday = index === todaySplitIndex;
+
+          return (
+            <button
+              key={split.id}
+              type="button"
+              onClick={() => setSelectedSplitIndex(index)}
+              className={cn(
+                "flex flex-col items-center rounded-2xl px-4 py-2 text-xs font-bold transition-all",
+                isSelected
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                  : "bg-white text-slate-500 shadow-sm hover:bg-slate-50"
+              )}
+            >
+              {/* Dias da semana */}
+              <span className={cn("text-[10px] font-semibold", isSelected ? "text-blue-100" : "text-slate-400")}>
+                {dias.length > 0 ? dias.join(" / ") : split.splitName}
+              </span>
+              {/* Nome do split */}
+              <span className="text-sm font-black">{split.splitName}</span>
+              {/* Indicador de hoje */}
+              {isToday && (
+                <span className={cn(
+                  "mt-0.5 h-1 w-1 rounded-full",
+                  isSelected ? "bg-white" : "bg-blue-500"
+                )} />
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Exercícios */}
@@ -110,9 +132,7 @@ export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutP
         <div className="rounded-2xl bg-green-500 p-4 shadow-md shadow-green-500/25">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-bold text-white">Progresso do Treino</span>
-            <span className="text-sm font-bold text-white">
-              {completedCount}/{totalExercises}
-            </span>
+            <span className="text-sm font-bold text-white">{completedCount}/{totalExercises}</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-green-400/50">
             <div

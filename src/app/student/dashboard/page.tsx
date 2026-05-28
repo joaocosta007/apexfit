@@ -48,8 +48,9 @@ export default async function StudentDashboardPage() {
 
   const allDates  = logs.map(l => l.date.toISOString().slice(0, 10));
   const streak    = calcularStreak(allDates);
-  const thisWeek  = logs.filter(l => l.date >= weekAgo).length;
-  const thisMonth = logs.filter(l => l.date >= monthStart).length;
+  // Conta dias únicos de treino (não registros individuais de exercício)
+  const thisWeek  = new Set(logs.filter(l => l.date >= weekAgo).map(l => l.date.toISOString().slice(0, 10))).size;
+  const thisMonth = new Set(logs.filter(l => l.date >= monthStart).map(l => l.date.toISOString().slice(0, 10))).size;
   const metaDias  = plan ? indicesDiasTreino(plan.trainingDays).length : 0;
 
   const recordMap: Record<string, number> = {};
