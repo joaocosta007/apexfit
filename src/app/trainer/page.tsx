@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { Role } from "@prisma/client";
-import { AlertTriangle, Bell, ChevronRight, Dumbbell, Link2, UsersRound } from "lucide-react";
+import { AlertTriangle, Bell, BookTemplate, ChevronRight, Dumbbell, Link2, UsersRound } from "lucide-react";
 import { enviarLembreteAction, gerarLinkCadastroAction } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
 import { CopyButton } from "@/components/copy-button";
@@ -113,6 +113,21 @@ export default async function TrainerDashboardPage({ searchParams }: TrainerPage
 
   return (
     <AppShell title="Painel do Professor" subtitle="Gerencie alunos, planos e acompanhe a frequência de treinos.">
+      {/* ── templates ── */}
+      <Link
+        href="/trainer/templates"
+        className="mb-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition-colors hover:bg-slate-50"
+      >
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-blue-50">
+          <BookTemplate className="h-5 w-5 text-blue-600" />
+        </div>
+        <div className="flex-1">
+          <p className="font-bold text-slate-900">Templates de treino</p>
+          <p className="text-xs text-slate-500">Monte treinos-modelo para aplicar a alunos</p>
+        </div>
+        <ChevronRight className="h-5 w-5 text-slate-300" />
+      </Link>
+
       {/* ── link de convite ── */}
       <Card className="mb-4">
         <CardContent className="pt-4">

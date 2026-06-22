@@ -629,6 +629,198 @@ export async function redefinirSenhaAction(token: string, formData: FormData) {
   redirect("/login?senha=redefinida");
 }
 
+// ─── Template actions ─────────────────────────────────────────────────────────
+
+async function garantirTemplateDoProfessor(templateId: string, trainerId: string) {
+  const template = await prisma.workoutTemplate.findFirst({
+    where: { id: templateId, trainerId }
+  });
+  if (!template) throw new Error("Template não encontrado.");
+  return template;
+}
+
+export async function criarTemplateAction(formData: FormData) {
+  const session = await requireRole(Role.TRAINER);
+  const name = campoTexto(formData, "name") || "Novo Template";
+
+  const template = await prisma.workoutTemplate.create({
+    data: {
+      trainerId: session.user.id,
+      name,
+      splits: {
+        create: ["Treino A", "Treino B", "Treino C"].map((splitName, sortOrder) => ({
+          splitName,
+          sortOrder
+        }))
+      }
+    }
+  });
+
+  revalidatePath("/trainer/templates");
+  redirect(`/trainer/templates/${template.id}`);
+}
+
+export async function renomearTemplateAction(templateId: string, formData: FormData) {
+  const session = await requireRole(Role.TRAINER);
+  await garantirTemplateDoProfessor(templateId, session.user.id);
+
+  const name = campoTexto(formData, "name") || "Template";
+  await prisma.workoutTemplate.update({
+    where: { id: templateId },
+    data: { name }
+  });
+
+  revalidatePath(`/trainer/templates/${templateId}`);
+  revalidatePath("/trainer/templates");
+}
+
+export async function adicionarDivisaoTemplateAction(templateId: string) {
+  const session = await requireRole(Role.TRAINER);
+  await garantirTemplateDoProfessor(templateId, session.user.id);
+
+  const splits = await prisma.workoutTemplateSplit.findMany({
+    where: { templateId },
+    orderBy: { sortOrder: "asc" }
+  });
+
+  const nextIndex = splits.length;
+  const nextLetter = String.fromCharCode(65 + nextIndex);
+
+  await prisma.workoutTemplateSplit.create({
+    data: { templateId, splitName: `Treino ${nextLetter}`, sortOrder: nextIndex }
+  });
+
+  revalidatePath(`/trainer/templates/${templateId}`);
+}
+
+export async function removerDivisaoTemplateAction(splitId: string, templateId: string) {
+  const session = await requireRole(Role.TRAINER);
+
+  const split = await prisma.workoutTemplateSplit.findFirst({
+    where: { id: splitId, template: { trainerId: session.user.id } }
+  });
+
+  if (!split) throw new Error("Divisão não encontrada.");
+  if (split.sortOrder < 3) throw new Error("Não é possível remover as divisões A, B e C.");
+
+  await prisma.workoutTemplateSplit.delete({ where: { id: splitId } });
+  revalidatePath(`/trainer/templates/${templateId}`);
+}
+
+export async function adicionarExercicioTemplateAction(splitId: string, templateId: string, formData: FormData) {
+  const session = await requireRole(Role.TRAINER);
+
+  const split = await prisma.workoutTemplateSplit.findFirst({
+    where: { id: splitId, template: { trainerId: session.user.id } }
+  });
+
+  if (!split) throw new Error("Divisão não encontrada.");
+
+  const catalogId = campoTexto(formData, "catalogId") || null;
+  const catalogExercise = catalogId ? findExerciseByCatalogId(catalogId) : null;
+
+  const parsed = exerciseSchema.parse({
+    name: catalogExercise?.name ?? campoTexto(formData, "name"),
+    sets: campoTexto(formData, "sets"),
+    reps: campoTexto(formData, "reps"),
+    loadKg: campoTexto(formData, "loadKg"),
+    restTime: campoTexto(formData, "restTime")
+  });
+
+  await prisma.workoutTemplateExercise.create({
+    data: {
+      splitId,
+      catalogId: catalogId ?? undefined,
+      name: parsed.name,
+      sets: parsed.sets,
+      reps: parsed.reps,
+      loadKg: parsed.loadKg,
+      restTime: parsed.restTime
+    }
+  });
+
+  revalidatePath(`/trainer/templates/${templateId}`);
+}
+
+export async function removerExercicioTemplateAction(exerciseId: string, templateId: string) {
+  const session = await requireRole(Role.TRAINER);
+
+  const exercise = await prisma.workoutTemplateExercise.findFirst({
+    where: { id: exerciseId, split: { template: { trainerId: session.user.id } } }
+  });
+
+  if (!exercise) throw new Error("Exercício não encontrado.");
+
+  await prisma.workoutTemplateExercise.delete({ where: { id: exerciseId } });
+  revalidatePath(`/trainer/templates/${templateId}`);
+}
+
+export async function excluirTemplateAction(templateId: string) {
+  const session = await requireRole(Role.TRAINER);
+  await garantirTemplateDoProfessor(templateId, session.user.id);
+
+  await prisma.workoutTemplate.delete({ where: { id: templateId } });
+
+  revalidatePath("/trainer/templates");
+  redirect("/trainer/templates");
+}
+
+export async function aplicarTemplateFormAction(planId: string, studentId: string, formData: FormData) {
+  const templateId = campoTexto(formData, "templateId");
+  if (!templateId) throw new Error("Selecione um template.");
+  return aplicarTemplateAction(templateId, planId, studentId);
+}
+
+export async function aplicarTemplateAction(templateId: string, planId: string, studentId: string) {
+  const session = await requireRole(Role.TRAINER);
+  await garantirAlunoDoProfessor(studentId, session.user.id);
+
+  const template = await prisma.workoutTemplate.findFirst({
+    where: { id: templateId, trainerId: session.user.id },
+    include: {
+      splits: {
+        orderBy: { sortOrder: "asc" },
+        include: { exercises: { orderBy: { createdAt: "asc" } } }
+      }
+    }
+  });
+
+  if (!template) throw new Error("Template não encontrado.");
+
+  const plan = await prisma.workoutPlan.findFirst({
+    where: { id: planId, trainerId: session.user.id, studentId }
+  });
+
+  if (!plan) throw new Error("Plano não encontrado.");
+
+  // Substitui os splits existentes pelos do template
+  await prisma.$transaction(async (tx) => {
+    await tx.workoutSplit.deleteMany({ where: { planId } });
+
+    for (const tSplit of template.splits) {
+      const newSplit = await tx.workoutSplit.create({
+        data: { planId, splitName: tSplit.splitName, sortOrder: tSplit.sortOrder }
+      });
+      for (const ex of tSplit.exercises) {
+        await tx.exercise.create({
+          data: {
+            splitId: newSplit.id,
+            catalogId: ex.catalogId ?? undefined,
+            name: ex.name,
+            sets: ex.sets,
+            reps: ex.reps,
+            loadKg: ex.loadKg,
+            restTime: ex.restTime
+          }
+        });
+      }
+    }
+  });
+
+  revalidatePath(`/trainer/workouts/${studentId}`);
+  redirect(`/trainer/workouts/${studentId}`);
+}
+
 export async function salvarAnamneseAction(formData: FormData) {
   const session = await requireRole(Role.STUDENT);
 

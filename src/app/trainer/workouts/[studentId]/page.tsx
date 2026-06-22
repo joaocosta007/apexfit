@@ -11,6 +11,7 @@ import {
   salvarAvaliacaoAction,
   salvarPlanoTreinoAction
 } from "@/app/actions";
+import { ApplyTemplateForm } from "@/components/apply-template-form";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmButton } from "@/components/confirm-button";
 import { DayToggleFields } from "@/components/day-toggle-fields";
@@ -75,12 +76,17 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
   const salvarAvaliacao = salvarAvaliacaoAction.bind(null, student.id);
   const removerAluno = removerAlunoAction.bind(null, student.id);
 
-  const [assessments, anamnese] = await Promise.all([
+  const [assessments, anamnese, templates] = await Promise.all([
     prisma.physicalAssessment.findMany({
       where: { studentId: student.id },
       orderBy: { date: "desc" }
     }),
-    prisma.anamnese.findUnique({ where: { studentId: student.id } })
+    prisma.anamnese.findUnique({ where: { studentId: student.id } }),
+    prisma.workoutTemplate.findMany({
+      where: { trainerId: session.user.id },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true }
+    })
   ]);
 
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -163,6 +169,20 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
               <p className="mt-2 text-sm text-slate-600">
                 Salve a configuração acima para criar automaticamente as divisões Treino A, Treino B e Treino C.
               </p>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {plan && templates.length > 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Carregar template</CardTitle>
+              <CardDescription>
+                Aplica um template ao plano atual — substitui todas as divisões e exercícios existentes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ApplyTemplateForm planId={plan.id} studentId={student.id} templates={templates} />
             </CardContent>
           </Card>
         ) : null}

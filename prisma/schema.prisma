@@ -41,6 +41,7 @@ model User {
   verificationTokens   EmailVerificationToken[]
   passwordResetTokens  PasswordResetToken[]
   anamnese             Anamnese?
+  workoutTemplates     WorkoutTemplate[]
 
   @@index([role])
   @@map("users")
@@ -212,6 +213,51 @@ model PasswordResetToken {
 
   @@index([token])
   @@map("password_reset_tokens")
+}
+
+model WorkoutTemplate {
+  id        String   @id @default(cuid())
+  trainerId String   @map("trainer_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  trainer User                   @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  splits  WorkoutTemplateSplit[]
+
+  @@index([trainerId])
+  @@map("workout_templates")
+}
+
+model WorkoutTemplateSplit {
+  id         String   @id @default(cuid())
+  templateId String   @map("template_id")
+  splitName  String   @map("split_name")
+  sortOrder  Int      @default(0) @map("sort_order")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  template  WorkoutTemplate          @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  exercises WorkoutTemplateExercise[]
+
+  @@index([templateId, sortOrder])
+  @@map("workout_template_splits")
+}
+
+model WorkoutTemplateExercise {
+  id        String   @id @default(cuid())
+  splitId   String   @map("split_id")
+  catalogId String?  @map("catalog_id")
+  name      String
+  sets      Int
+  reps      Int
+  loadKg    Float    @map("load_kg")
+  restTime  String   @map("rest_time")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  split WorkoutTemplateSplit @relation(fields: [splitId], references: [id], onDelete: Cascade)
+
+  @@index([splitId])
+  @@map("workout_template_exercises")
 }
 
 model PushSubscription {
