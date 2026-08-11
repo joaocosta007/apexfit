@@ -45,6 +45,7 @@ export default async function StudentAnamnesePage({
       title="Anamnese"
       subtitle="Informe seu histórico de saúde para que seu professor monte o plano ideal."
       variant="student"
+      userName={session.user.name}
       action={
         <Button asChild variant="outline" size="icon">
           <Link href="/student/dashboard" aria-label="Voltar">
@@ -52,6 +53,7 @@ export default async function StudentAnamnesePage({
           </Link>
         </Button>
       }
+      bottomNav={<StudentBottomNav active="dashboard" />}
     >
       {salvo && (
         <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">

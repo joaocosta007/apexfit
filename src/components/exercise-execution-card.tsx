@@ -139,7 +139,7 @@ export function ExerciseExecutionCard({ exercise, lastLoad, videoUrl, onComplete
         </div>
       )}
 
-      <div className={`overflow-hidden rounded-2xl bg-white shadow-sm transition-all ${completed ? "border-l-4 border-l-green-500" : ""}`}>
+      <div className={`overflow-hidden rounded-[22px] border bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08)] transition-all ${completed ? "border-green-200" : "border-slate-200"}`}>
 
         {/* ── Temporizador de descanso ── */}
         {timerVisible && (
@@ -199,7 +199,7 @@ export function ExerciseExecutionCard({ exercise, lastLoad, videoUrl, onComplete
           </div>
         )}
 
-        <div className="p-4">
+        <div className="p-5">
           {/* Linha: toggle + nome + vídeo */}
           <div className="flex items-start gap-3">
             <button
@@ -215,12 +215,10 @@ export function ExerciseExecutionCard({ exercise, lastLoad, videoUrl, onComplete
             </button>
 
             <div className="flex-1 min-w-0">
-              <h3 className={`text-base font-bold leading-tight ${completed ? "text-slate-400 line-through" : "text-slate-900"}`}>
+              <h3 className={`text-base font-black leading-tight ${completed ? "text-slate-400 line-through" : "text-slate-900"}`}>
                 {exercise.name}
               </h3>
-              <p className="mt-0.5 text-xs text-slate-400">
-                {exercise.sets} séries • {exercise.reps} reps • {formatarCarga(exercise.loadKg)}
-              </p>
+              <p className="mt-1 text-xs font-medium text-slate-400">Plano de treino</p>
             </div>
 
             {videoUrl && (
@@ -235,28 +233,24 @@ export function ExerciseExecutionCard({ exercise, lastLoad, videoUrl, onComplete
             )}
           </div>
 
-          {/* Linha: descanso + última carga + carga */}
-          <div className="mt-3 flex items-center gap-2">
-            <span className="flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-              <Clock className="h-3 w-3" />
-              {exercise.restTime}
-            </span>
+          <div className="mt-5 grid grid-cols-4 gap-2">
+            <div className="soft-surface px-2 py-3 text-center"><p className="font-black text-slate-900">{exercise.sets}</p><p className="text-[10px] text-slate-400">Séries</p></div>
+            <div className="soft-surface px-2 py-3 text-center"><p className="font-black text-slate-900">{exercise.reps}</p><p className="text-[10px] text-slate-400">Reps</p></div>
+            <div className="soft-surface px-2 py-3 text-center"><p className="font-black text-slate-900">{exercise.loadKg}</p><p className="text-[10px] text-slate-400">Carga (kg)</p></div>
+            <div className="soft-surface px-2 py-3 text-center"><p className="font-black text-slate-900">{lastLoad ?? "—"}</p><p className="text-[10px] text-slate-400">Última (kg)</p></div>
+          </div>
 
-            {lastLoad != null && (
-              <span className="text-[10px] text-slate-400">
-                Última: <span className="font-semibold">{formatarCarga(lastLoad)}</span>
-              </span>
-            )}
-
-            <div className="ml-auto flex items-center gap-1.5">
-              <span className="text-xs font-bold uppercase tracking-wide text-slate-400">Carga:</span>
+          <div className="mt-4 flex items-center gap-3">
+            <span className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#eef3fb] text-sm font-bold text-blue-600"><Clock className="h-4 w-4" /> {exercise.restTime} descanso</span>
+            <div className="flex h-12 flex-1 items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white">
+              <span className="text-xs font-bold text-slate-400">Carga:</span>
               <input
                 type="number"
                 min="0"
                 step="0.5"
                 value={load}
                 onChange={(e) => setLoad(Number(e.target.value))}
-                className="w-14 rounded-lg border border-slate-200 bg-slate-50 px-1.5 py-1 text-center text-sm font-black text-blue-600 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                className="w-12 bg-transparent text-center text-sm font-black text-slate-900 outline-none"
                 aria-label="Carga em kg"
               />
               <span className="text-xs font-semibold text-slate-400">kg</span>

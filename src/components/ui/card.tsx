@@ -2,12 +2,12 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("rounded-xl border border-slate-200 bg-white shadow-md", className)} {...props} />
+  <div ref={ref} className={cn("rounded-[22px] border border-slate-200/90 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08)]", className)} {...props} />
 ));
 Card.displayName = "Card";
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex flex-col space-y-2 p-5", className)} {...props} />
+  ({ className, ...props }, ref) => <div ref={ref} className={cn("flex flex-col space-y-2 p-5 sm:p-6", className)} {...props} />
 );
 CardHeader.displayName = "CardHeader";
 

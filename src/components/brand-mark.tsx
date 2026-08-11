@@ -1,13 +1,12 @@
-import Image from "next/image";
+import { Dumbbell } from "lucide-react";
 
-export function BrandMark() {
+export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-3">
-      <Image src="/unasp-logo.png" alt="Logo UNASP" width={112} height={40} className="object-contain" />
-      <div>
-        <p className="text-lg font-black tracking-[0.16em] text-primary">APEXFIT</p>
-        <p className="text-xs font-medium text-slate-600">Gestão inteligente de treinos</p>
-      </div>
+    <div className={`flex items-center ${compact ? "gap-2.5" : "flex-col gap-3"}`}>
+      <span className={`flex items-center justify-center rounded-2xl bg-[#0d2342] ${compact ? "h-10 w-10" : "h-12 w-12"}`}>
+        <Dumbbell className={`${compact ? "h-5 w-5" : "h-7 w-7"} -rotate-45 text-white`} strokeWidth={2.4} aria-hidden="true" />
+      </span>
+      <p className={`${compact ? "text-lg" : "text-xl"} font-black tracking-tight text-[#0d2342]`}>ApexFit</p>
     </div>
   );
 }

@@ -76,7 +76,7 @@ export default async function StudentWorkoutTodayPage() {
     : null;
 
   return (
-    <AppShell title="Treino de Hoje" variant="student" bottomNav={<StudentBottomNav active="workout" />}>
+    <AppShell title="Treino de Hoje" variant="student" userName={session.user.name} showPageHeader={false} bottomNav={<StudentBottomNav active="workout" />}>
       {!emailVerified && <EmailVerificationBanner />}
 
       {!plan ? (

@@ -2,7 +2,6 @@ import { Role } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
 import { LoadEvolutionChart } from "@/components/load-evolution-chart";
 import { StudentBottomNav } from "@/components/student-bottom-nav";
-import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 
@@ -34,11 +33,16 @@ export default async function StudentProgressPage() {
 
   return (
     <AppShell
-      title="Evolução de Carga"
-      subtitle="Acompanhe seu progresso ao longo do tempo"
+      title="Evolução"
       variant="student"
+      userName={session.user.name}
       bottomNav={<StudentBottomNav active="progress" />}
     >
+      <div className="mb-5 grid grid-cols-3 rounded-2xl bg-[#eef2f8] p-1 text-center text-sm font-bold text-slate-500">
+        <span className="rounded-xl px-2 py-2.5">Composição</span>
+        <span className="rounded-xl px-2 py-2.5">Frequência</span>
+        <span className="rounded-xl bg-white px-2 py-2.5 text-slate-900 shadow-sm">Cargas</span>
+      </div>
       {exercises.length === 0 ? (
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="font-semibold text-slate-900">Nenhum registro ainda.</p>

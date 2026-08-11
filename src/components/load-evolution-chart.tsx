@@ -46,7 +46,7 @@ export function LoadEvolutionChart({ exercises }: { exercises: ExerciseProgress[
         <select
           value={selectedName}
           onChange={(e) => setSelectedName(e.target.value)}
-          className="w-full appearance-none rounded-2xl border border-slate-200 bg-white px-4 py-3.5 pr-10 text-sm font-bold text-slate-900 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          className="app-card w-full appearance-none px-4 py-3.5 pr-10 text-sm font-bold text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
         >
           {sorted.map((e) => (
             <option key={e.name} value={e.name}>{e.name}</option>
@@ -57,17 +57,17 @@ export function LoadEvolutionChart({ exercises }: { exercises: ExerciseProgress[
 
       {/* Stat chips */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="app-card p-4">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Início</p>
           <p className="mt-1 text-lg font-black text-slate-900">{formatarCarga(firstLoad)}</p>
         </div>
-        <div className="rounded-2xl bg-white p-3 shadow-sm">
+        <div className="app-card p-4">
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Melhor</p>
           <p className="mt-1 text-lg font-black text-slate-900">{formatarCarga(bestLoad)}</p>
         </div>
-        <div className={`rounded-2xl p-3 shadow-sm ${improvement > 0 ? "bg-green-500" : improvement < 0 ? "bg-red-50" : "bg-slate-100"}`}>
-          <p className={`text-[10px] font-bold uppercase tracking-wide ${improvement > 0 ? "text-green-100" : "text-slate-400"}`}>Progresso</p>
-          <div className={`mt-1 flex items-center gap-0.5 ${improvement > 0 ? "text-white" : improvementColor}`}>
+        <div className={`rounded-[22px] border p-4 shadow-sm ${improvement > 0 ? "border-green-100 bg-green-50" : improvement < 0 ? "border-red-100 bg-red-50" : "border-slate-200 bg-white"}`}>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Progresso</p>
+          <div className={`mt-1 flex items-center gap-0.5 ${improvementColor}`}>
             <ImprovementIcon className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="text-lg font-black">
               {improvement >= 0 ? "+" : ""}{improvement.toFixed(0)}%
@@ -77,7 +77,7 @@ export function LoadEvolutionChart({ exercises }: { exercises: ExerciseProgress[
       </div>
 
       {/* Chart */}
-      <div className="rounded-2xl bg-white p-4 shadow-sm">
+      <div className="app-card p-5">
         <p className="mb-3 text-sm font-bold text-slate-900">Histórico de Carga</p>
 
         {!hasData ? (

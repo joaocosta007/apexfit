@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2, LockKeyhole, Mail } from "lucide-react";
 
 export function LoginForm({ initialError }: { initialError?: string }) {
   const router = useRouter();
   const [erro, setErro] = useState(initialError ?? "");
+  const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -31,33 +32,37 @@ export function LoginForm({ initialError }: { initialError?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <input
-        id="email"
-        name="email"
-        type="email"
-        placeholder="Digite seu email"
-        autoComplete="email"
-        required
-        className="w-full rounded-full border border-slate-200 bg-white px-5 py-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-      />
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <label className="block space-y-2" htmlFor="email">
+        <span className="text-sm font-bold text-slate-900">E-mail</span>
+        <span className="relative block">
+          <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <input id="email" name="email" type="email" placeholder="voce@exemplo.com" autoComplete="email" required
+            className="h-14 w-full rounded-2xl border border-transparent bg-[#f1f5fb] pl-12 pr-4 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-100" />
+        </span>
+      </label>
 
-      <div className="space-y-1.5">
-        <input
-          id="password"
-          name="password"
-          type="password"
-          placeholder="Digite sua senha"
+      <div className="space-y-2">
+        <label className="text-sm font-bold text-slate-900" htmlFor="password">Senha</label>
+        <div className="relative">
+          <LockKeyhole className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <input
+          id="password" name="password" type={showPassword ? "text" : "password"} placeholder="••••••••"
           autoComplete="current-password"
           required
-          className="w-full rounded-full border border-slate-200 bg-white px-5 py-4 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          className="h-14 w-full rounded-2xl border border-transparent bg-[#f1f5fb] pl-12 pr-12 text-sm font-medium text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
         />
-        <div className="px-1">
+          <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
+        <div>
           <Link
             href="/forgot-password"
             className="text-sm font-semibold text-blue-600 hover:text-blue-700"
           >
-            Esqueci minha senha
+            Esqueceu a senha?
           </Link>
         </div>
       </div>
@@ -68,11 +73,11 @@ export function LoginForm({ initialError }: { initialError?: string }) {
         </div>
       )}
 
-      <div className="pt-2">
+      <div className="pt-1">
         <button
           type="submit"
           disabled={isPending}
-          className="flex w-full items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-700 py-4 text-base font-bold text-white shadow-md shadow-blue-600/25 transition-opacity hover:opacity-90 disabled:opacity-70"
+          className="flex h-14 w-full items-center justify-center rounded-2xl bg-blue-600 text-base font-bold text-white shadow-sm shadow-blue-600/20 transition-colors hover:bg-blue-700 disabled:opacity-70"
         >
           {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
           Entrar

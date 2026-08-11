@@ -1,4 +1,3 @@
-import { CalendarDays } from "lucide-react";
 import { Role } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
 import { StudentBottomNav } from "@/components/student-bottom-nav";
@@ -43,9 +42,9 @@ export default async function StudentAssessmentsPage() {
 
   return (
     <AppShell
-      title="Avaliação Física"
-      subtitle="Acompanhe suas medidas corporais"
+      title="Avaliações Físicas"
       variant="student"
+      userName={session.user.name}
       bottomNav={<StudentBottomNav active="assessments" />}
     >
       {!latest ? (
@@ -57,26 +56,19 @@ export default async function StudentAssessmentsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Header azul */}
-          <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-4 shadow-lg shadow-blue-600/20">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-              <CalendarDays className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-blue-100">Última avaliação</p>
-              <p className="text-lg font-black text-white">
-                {latest.date.toLocaleDateString("pt-BR", { day: "numeric", month: "long", year: "numeric" })}
-              </p>
-            </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {assessments.slice(0, 3).map((assessment, index) => <span key={assessment.id} className={`whitespace-nowrap rounded-full border px-5 py-2.5 text-sm font-bold ${index === 0 ? "border-[#0d2342] bg-[#0d2342] text-white" : "border-slate-200 bg-white text-slate-500"}`}>{assessment.date.toLocaleDateString("pt-BR")}</span>)}
           </div>
 
-          {/* Peso + Gordura — destaque */}
+          <div className="app-card p-5">
+            <div className="mb-5 flex items-center justify-between"><h2 className="font-black text-slate-900">Avaliação de {latest.date.toLocaleDateString("pt-BR")}</h2><span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-bold text-green-700">Recente</span></div>
+
           {(latest.weight != null || latest.bodyFat != null) && (
             <div className="grid grid-cols-2 gap-3">
               {latest.weight != null && (() => {
                 const d = delta(latest.weight, previous?.weight ?? null);
                 return (
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
+                  <div className="soft-surface p-4 text-center">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Peso atual</p>
                     <p className="mt-1 text-2xl font-black text-slate-900">
                       {latest.weight}<span className="text-sm font-semibold text-slate-400">kg</span>
@@ -93,7 +85,7 @@ export default async function StudentAssessmentsPage() {
               {latest.bodyFat != null && (() => {
                 const d = delta(latest.bodyFat, previous?.bodyFat ?? null);
                 return (
-                  <div className="rounded-2xl bg-white p-4 shadow-sm">
+                  <div className="soft-surface p-4 text-center">
                     <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Gordura corporal</p>
                     <p className="mt-1 text-2xl font-black text-slate-900">
                       {latest.bodyFat}<span className="text-sm font-semibold text-slate-400">%</span>
@@ -110,32 +102,24 @@ export default async function StudentAssessmentsPage() {
             </div>
           )}
 
-          {/* Outras medidas */}
           {medidas(latest).length > 0 && (
             <>
-              <h2 className="text-base font-black text-slate-900">Outras Medidas</h2>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="my-5 flex items-center gap-3"><span className="h-px flex-1 bg-slate-200" /><h3 className="text-sm font-bold text-slate-400">Medidas (cm)</h3><span className="h-px flex-1 bg-slate-200" /></div>
+              <div className="grid grid-cols-2 gap-x-5">
                 {medidas(latest).map((m) => {
-                  const prev = previous ? medidas(previous).find(p => p.label === m.label)?.value ?? null : null;
-                  const d = delta(m.value, prev);
                   return (
-                    <div key={m.label} className="rounded-2xl bg-white p-4 shadow-sm">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{m.label}</p>
-                      <p className="mt-1 text-xl font-black text-slate-900">
+                    <div key={m.label} className="flex items-center justify-between border-b border-slate-100 py-3">
+                      <p className="text-sm font-medium text-slate-500">{m.label}</p>
+                      <p className="text-sm font-black text-slate-900">
                         {m.value} <span className="text-xs font-semibold text-slate-400">{m.unit}</span>
                       </p>
-                      {d && (
-                        <p className={`mt-1 flex items-center gap-0.5 text-xs font-bold ${d.positive ? "text-green-600" : "text-red-500"}`}>
-                          <span>{d.positive ? "↗" : "↘"}</span>
-                          <span>{d.text}cm</span>
-                        </p>
-                      )}
                     </div>
                   );
                 })}
               </div>
             </>
           )}
+          </div>
 
           {/* Histórico */}
           {assessments.length > 1 && (

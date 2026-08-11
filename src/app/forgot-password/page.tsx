@@ -4,12 +4,15 @@ import { ForgotPasswordForm } from "@/components/forgot-password-form";
 import { BrandMark } from "@/components/brand-mark";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function ForgotPasswordPage({
+type ForgotPasswordPageProps = {
+  searchParams?: Promise<{ enviado?: string }>;
+};
+
+export default async function ForgotPasswordPage({
   searchParams
-}: {
-  searchParams?: { enviado?: string };
-}) {
-  const enviado = searchParams?.enviado === "ok";
+}: ForgotPasswordPageProps) {
+  const params = await searchParams;
+  const enviado = params?.enviado === "ok";
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center bg-slate-50 px-4 py-8">

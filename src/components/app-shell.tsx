@@ -1,5 +1,6 @@
 import { BrandMark } from "@/components/brand-mark";
 import { LogoutButton } from "@/components/logout-button";
+import { Bell } from "lucide-react";
 
 type AppShellProps = {
   title: string;
@@ -8,54 +9,59 @@ type AppShellProps = {
   action?: React.ReactNode;
   variant?: "default" | "student";
   bottomNav?: React.ReactNode;
+  userName?: string | null;
+  showPageHeader?: boolean;
 };
 
-export function AppShell({ title, subtitle, children, action, variant = "default", bottomNav }: AppShellProps) {
+function initials(name?: string | null) {
+  return (name ?? "Apex Fit").split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+}
+
+export function AppShell({ title, subtitle, children, action, variant = "default", bottomNav, userName, showPageHeader = true }: AppShellProps) {
   if (variant === "student") {
     return (
-      <div
-        className="mx-auto flex w-full max-w-lg flex-col"
-        style={{ background: "#EEF2F7", height: "100dvh" }}
-      >
-        {/* Cabeçalho fixo no topo */}
-        <div className="flex-shrink-0 px-4 pb-3 pt-8">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
-              {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
-            </div>
-            <div className="flex flex-shrink-0 items-center gap-2">
-              {action}
-              <LogoutButton />
-            </div>
+      <div className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-[#f5f7fb] shadow-2xl">
+        <header className="flex h-20 flex-shrink-0 items-center justify-between border-b border-slate-200/80 bg-white px-4">
+          <BrandMark compact />
+          <div className="flex items-center gap-1.5">
+            {action}
+            <button type="button" aria-label="Notificações" className="relative flex h-10 w-10 items-center justify-center text-slate-500">
+              <Bell className="h-5 w-5" />
+              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500" />
+            </button>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-500 text-sm font-bold text-white">
+              {initials(userName)}
+            </span>
+            <LogoutButton />
           </div>
-        </div>
+        </header>
 
-        {/* Conteúdo com scroll */}
-        <div className="flex-1 overflow-y-auto px-4 pb-4">
+        <div className="flex-1 overflow-y-auto px-4 pb-6 pt-5">
+          <div className={showPageHeader ? "mb-5" : "sr-only"}>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900">{title}</h1>
+            {subtitle && <p className="mt-1 text-sm font-medium text-slate-500">{subtitle}</p>}
+          </div>
           {children}
         </div>
 
-        {/* Nav sempre visível no rodapé */}
         {bottomNav}
       </div>
     );
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-lg flex-col bg-slate-50 px-4 pb-24 pt-5">
-      <header className="mb-6 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-        <BrandMark />
-        <LogoutButton />
+    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col bg-[#f5f7fb] px-4 pb-24 pt-5 sm:px-6">
+      <header className="mb-8 flex items-center justify-between gap-3 border-b border-slate-200/80 bg-white px-4 py-3 shadow-sm sm:rounded-[20px] sm:border">
+        <BrandMark compact />
+        <div className="flex items-center gap-2">{action}<LogoutButton /></div>
       </header>
 
       <section className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.28em] text-primary">ApexFit</p>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900">{title}</h1>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-blue-600">Painel ApexFit</p>
+          <h1 className="text-3xl font-black tracking-tight text-[#101828]">{title}</h1>
           {subtitle && <p className="mt-2 text-sm text-slate-600">{subtitle}</p>}
         </div>
-        {action}
       </section>
 
       {children}

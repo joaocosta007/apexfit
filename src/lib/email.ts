@@ -4,12 +4,22 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const FROM = process.env.EMAIL_FROM ?? "ApexFit <onboarding@resend.dev>";
 
+async function sendEmail(
+  payload: Parameters<typeof resend.emails.send>[0]
+) {
+  const { error } = await resend.emails.send(payload);
+
+  if (error) {
+    throw new Error(`Falha ao enviar e-mail pelo Resend: ${error.message}`);
+  }
+}
+
 export async function sendVerificationEmail(
   to: string,
   name: string,
   verifyUrl: string
 ) {
-  await resend.emails.send({
+  await sendEmail({
     from: FROM,
     to,
     subject: "Confirme seu e-mail — ApexFit",
@@ -61,7 +71,7 @@ export async function sendPasswordResetEmail(
   name: string,
   resetUrl: string
 ) {
-  await resend.emails.send({
+  await sendEmail({
     from: FROM,
     to,
     subject: "Redefinir senha — ApexFit",

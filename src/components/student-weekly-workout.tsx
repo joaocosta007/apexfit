@@ -56,16 +56,17 @@ export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutP
 
   return (
     <div className="space-y-4">
-      {/* Chip do dia */}
-      <div className="flex items-center gap-2">
-        <span className={cn(
-          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold",
-          isRestDay ? "bg-slate-100 text-slate-500" : "bg-green-100 text-green-700"
-        )}>
-          <span className={cn("h-1.5 w-1.5 rounded-full", isRestDay ? "bg-slate-400" : "bg-green-500")} />
-          {today?.nome ?? "Hoje"} • {isRestDay ? "Descanso" : (selectedSplit?.splitName ?? "")}
-        </span>
-      </div>
+      <section className="-mx-4 -mt-5 bg-[#0d2342] px-5 py-6 text-white">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-bold text-slate-300">{selectedSplit?.splitName ?? plan.planName}</p>
+            <h1 className="mt-1 text-2xl font-black">{plan.planName}</h1>
+          </div>
+          <p className="text-sm font-bold">{completedCount}/{totalExercises} concluídos</p>
+        </div>
+        <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full rounded-full bg-white transition-all" style={{ width: `${progressPct}%` }} /></div>
+        <div className="mt-4 flex gap-5 text-sm font-medium text-slate-300"><span>◷ ~45 min</span><span>🏋 {totalExercises} exercícios</span></div>
+      </section>
 
       {/* Abas com dias da semana */}
       <div className="flex flex-wrap gap-2">
@@ -82,8 +83,8 @@ export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutP
               className={cn(
                 "flex flex-col items-center rounded-2xl px-4 py-2 text-xs font-bold transition-all",
                 isSelected
-                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-                  : "bg-white text-slate-500 shadow-sm hover:bg-slate-50"
+                  ? "bg-[#0d2342] text-white shadow-sm"
+                  : "border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
               )}
             >
               {/* Dias da semana */}
@@ -127,9 +128,8 @@ export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutP
         </div>
       )}
 
-      {/* Barra de progresso */}
-      {totalExercises > 0 && (
-        <div className="rounded-2xl bg-green-500 p-4 shadow-md shadow-green-500/25">
+      {totalExercises > 0 && completedCount === totalExercises && (
+        <div className="rounded-[22px] bg-green-500 p-4 shadow-md shadow-green-500/20">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-bold text-white">Progresso do Treino</span>
             <span className="text-sm font-bold text-white">{completedCount}/{totalExercises}</span>

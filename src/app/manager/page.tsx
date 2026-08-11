@@ -54,11 +54,12 @@ export default async function ManagerDashboardPage() {
         </Card>
       </div>
 
-      <section className="space-y-3">
+      <section>
         <h2 className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">Professores</h2>
 
-        {trainers.map((trainer) => (
-          <Link key={trainer.id} href={`/manager/${trainer.id}`} className="block">
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          {trainers.map((trainer) => (
+            <Link key={trainer.id} href={`/manager/${trainer.id}`} className="block">
             <Card className="transition-colors hover:border-primary/40">
               <CardContent className="flex items-center gap-4 pt-5">
                 <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 text-lg font-black text-primary">
@@ -76,8 +77,9 @@ export default async function ManagerDashboardPage() {
                 <ChevronRight className="h-5 w-5 text-slate-400" />
               </CardContent>
             </Card>
-          </Link>
-        ))}
+            </Link>
+          ))}
+        </div>
       </section>
     </AppShell>
   );

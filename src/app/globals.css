@@ -4,15 +4,15 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 220 33% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 213 100% 18%;
+    --primary: 216 64% 17%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 221 83% 36%;
+    --secondary: 221 83% 53%;
     --secondary-foreground: 0 0% 100%;
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
@@ -20,10 +20,10 @@
     --accent-foreground: 213 100% 18%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 213 100% 18%;
-    --radius: 0.875rem;
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 221 83% 53%;
+    --radius: 1.125rem;
   }
 
   * {
@@ -36,7 +36,18 @@
 
   body {
     @apply min-h-screen text-slate-900 antialiased;
-    background: #EEF2F7;
+    background: #f5f7fb;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer components {
+  .app-card {
+    @apply rounded-[22px] border border-slate-200/90 bg-white shadow-[0_2px_8px_rgba(15,23,42,0.08)];
+  }
+
+  .soft-surface {
+    @apply rounded-2xl bg-[#f3f6fb];
   }
 }
 

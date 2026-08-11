@@ -55,7 +55,8 @@ export default async function TrainerDashboardPage({ searchParams }: TrainerPage
   const session = await requireRole(Role.TRAINER);
   const { invite: inviteToken } = await searchParams;
 
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
   const relations = await prisma.studentTrainer.findMany({
     where: { trainerId: session.user.id },
@@ -189,22 +190,23 @@ export default async function TrainerDashboardPage({ searchParams }: TrainerPage
       </div>
 
       {/* ── lista de alunos ── */}
-      <section className="space-y-3">
+      <section>
         <h2 className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">Meus alunos</h2>
 
-        {students.length === 0 ? (
-          <Card>
-            <CardContent className="pt-5">
-              <p className="font-semibold text-slate-900">Nenhum aluno cadastrado ainda.</p>
-              <p className="mt-2 text-sm text-slate-600">Toque no botão azul para adicionar seu primeiro aluno.</p>
-            </CardContent>
-          </Card>
-        ) : null}
+        <div className="mt-3 grid gap-3 lg:grid-cols-2">
+          {students.length === 0 ? (
+            <Card>
+              <CardContent className="pt-5">
+                <p className="font-semibold text-slate-900">Nenhum aluno cadastrado ainda.</p>
+                <p className="mt-2 text-sm text-slate-600">Toque no botão azul para adicionar seu primeiro aluno.</p>
+              </CardContent>
+            </Card>
+          ) : null}
 
-        {students.map(({ student, plan, dias, status, weekCount }) => {
-          const style = statusStyle[status];
-          return (
-            <Link key={student.id} href={`/trainer/workouts/${student.id}`} className="block">
+          {students.map(({ student, plan, dias, status, weekCount }) => {
+            const style = statusStyle[status];
+            return (
+              <Link key={student.id} href={`/trainer/workouts/${student.id}`} className="block">
               <Card className="transition-colors hover:border-primary/40">
                 <CardContent className="flex items-center gap-4 pt-4 pb-4">
                   <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-sm font-black ${style.avatar}`}>
@@ -235,9 +237,10 @@ export default async function TrainerDashboardPage({ searchParams }: TrainerPage
                   </div>
                 </CardContent>
               </Card>
-            </Link>
-          );
-        })}
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
       <FAB href="/trainer/students/new" label="Adicionar Aluno" />

@@ -1,69 +1,51 @@
-import Image from "next/image";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/login-form";
 import { authOptions, roleHomePath } from "@/lib/auth";
+import { BrandMark } from "@/components/brand-mark";
 
 export default async function LoginPage({
   searchParams
 }: {
-  searchParams?: { erro?: string; error?: string; cadastro?: string; verificado?: string; senha?: string };
+  searchParams?: Promise<{
+    erro?: string;
+    error?: string;
+    cadastro?: string;
+    verificado?: string;
+    senha?: string;
+  }>;
 }) {
   const session = await getServerSession(authOptions);
   if (session?.user?.role) redirect(roleHomePath[session.user.role]);
 
+  const params = await searchParams;
+
   const initialError =
-    searchParams?.erro === "acesso-negado"
+    params?.erro === "acesso-negado"
       ? "Acesso negado para esta área. Entre com o perfil correto."
-      : searchParams?.erro === "token-invalido"
+      : params?.erro === "token-invalido"
         ? "Link de verificação inválido. Solicite um novo e-mail."
-        : searchParams?.erro === "token-expirado"
+        : params?.erro === "token-expirado"
           ? "Link de verificação expirado. Solicite um novo e-mail após entrar."
-          : searchParams?.error
+          : params?.error
             ? "Não foi possível autenticar. Verifique suas credenciais."
             : "";
 
   const successMsg =
-    searchParams?.senha === "redefinida"
+    params?.senha === "redefinida"
       ? "Senha redefinida com sucesso! Faça login com a nova senha."
-      : searchParams?.verificado === "ok"
+      : params?.verificado === "ok"
         ? "E-mail confirmado! Faça login para continuar."
-        : searchParams?.cadastro === "ok"
+        : params?.cadastro === "ok"
           ? "Conta criada! Verifique seu e-mail para confirmar o cadastro."
           : "";
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 py-12" style={{ background: "#EEF2F7" }}>
-      <div className="w-full max-w-sm">
-        {/* Cabeçalho institucional */}
-        <div className="mb-8 flex flex-col items-center gap-5">
-
-          {/* Logos CENAPE + UNASP empilhados */}
-          <div className="flex flex-col items-center gap-2">
-            <Image
-              src="/cenape.png"
-              alt="CENAPE"
-              width={140}
-              height={56}
-              className="h-14 w-auto object-contain"
-            />
-            <Image
-              src="/unasp-logo.png"
-              alt="UNASP"
-              width={60}
-              height={24}
-              className="h-6 w-auto object-contain opacity-60"
-            />
-          </div>
-
-          {/* ApexFit */}
-          <div className="flex flex-col items-center text-center">
-            <div className="mb-3 flex h-20 w-20 items-center justify-center rounded-[22px] bg-blue-600 shadow-lg shadow-blue-600/30">
-              <Image src="/icon.svg" alt="ApexFit" width={48} height={48} />
-            </div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">APEXFIT</h1>
-            <p className="mt-1 text-sm text-slate-500">Seu treino, seu progresso</p>
-          </div>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-[#f5f7fb] px-5 py-10">
+      <div className="w-full max-w-[430px]">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <BrandMark />
+          <p className="mt-3 text-sm font-semibold tracking-wide text-slate-500">CENAPE · UNASP · APEXFIT</p>
         </div>
 
         {/* Feedbacks */}
@@ -73,7 +55,12 @@ export default async function LoginPage({
           </div>
         )}
 
-        <LoginForm initialError={initialError} />
+        <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-[0_2px_10px_rgba(15,23,42,0.09)] sm:p-8">
+          <h1 className="mb-6 text-2xl font-black tracking-tight text-slate-900">Entrar na sua conta</h1>
+          <LoginForm initialError={initialError} />
+        </div>
+
+        <p className="mt-7 text-center text-xs font-medium text-slate-400">Gestão inteligente de treinos</p>
       </div>
     </main>
   );
