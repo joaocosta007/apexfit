@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { PlanType, Role } from "@prisma/client";
-import { findExerciseByCatalogId } from "@/lib/exercise-catalog";
+import { CUSTOM_EXERCISE_VALUE, findExerciseByCatalogId } from "@/lib/exercise-catalog";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
@@ -45,7 +45,7 @@ const trainerSchema = z.object({
 });
 
 const exerciseSchema = z.object({
-  name: z.string().min(2, "Informe o nome do exercício."),
+  name: z.string().min(2, "Informe o nome do exercício.").max(100, "Use no máximo 100 caracteres."),
   sets: z.coerce.number().int().min(1).max(20),
   reps: z.coerce.number().int().min(1).max(999),
   loadKg: z.coerce.number().min(0).max(1000),
@@ -55,6 +55,27 @@ const exerciseSchema = z.object({
 function campoTexto(formData: FormData, campo: string) {
   const valor = formData.get(campo);
   return typeof valor === "string" ? valor.trim() : "";
+}
+
+function dadosDoExercicioSelecionado(formData: FormData) {
+  const selectedValue = campoTexto(formData, "catalogId");
+
+  if (selectedValue === CUSTOM_EXERCISE_VALUE) {
+    return {
+      catalogId: null,
+      name: campoTexto(formData, "customExerciseName")
+    };
+  }
+
+  const catalogExercise = findExerciseByCatalogId(selectedValue);
+  if (!catalogExercise) {
+    throw new Error("Selecione um exercício da lista ou escolha Outro exercício.");
+  }
+
+  return {
+    catalogId: catalogExercise.id,
+    name: catalogExercise.name
+  };
 }
 
 function diasSelecionados(formData: FormData) {
@@ -311,11 +332,10 @@ export async function adicionarExercicioAction(splitId: string, studentId: strin
     throw new Error("Divisão de treino não encontrada.");
   }
 
-  const catalogId = campoTexto(formData, "catalogId") || null;
-  const catalogExercise = catalogId ? findExerciseByCatalogId(catalogId) : null;
+  const selectedExercise = dadosDoExercicioSelecionado(formData);
 
   const parsed = exerciseSchema.parse({
-    name: catalogExercise?.name ?? campoTexto(formData, "name"),
+    name: selectedExercise.name,
     sets: campoTexto(formData, "sets"),
     reps: campoTexto(formData, "reps"),
     loadKg: campoTexto(formData, "loadKg"),
@@ -325,7 +345,7 @@ export async function adicionarExercicioAction(splitId: string, studentId: strin
   await prisma.exercise.create({
     data: {
       splitId,
-      catalogId: catalogId ?? undefined,
+      catalogId: selectedExercise.catalogId ?? undefined,
       name: parsed.name,
       sets: parsed.sets,
       reps: parsed.reps,
@@ -716,11 +736,10 @@ export async function adicionarExercicioTemplateAction(splitId: string, template
 
   if (!split) throw new Error("Divisão não encontrada.");
 
-  const catalogId = campoTexto(formData, "catalogId") || null;
-  const catalogExercise = catalogId ? findExerciseByCatalogId(catalogId) : null;
+  const selectedExercise = dadosDoExercicioSelecionado(formData);
 
   const parsed = exerciseSchema.parse({
-    name: catalogExercise?.name ?? campoTexto(formData, "name"),
+    name: selectedExercise.name,
     sets: campoTexto(formData, "sets"),
     reps: campoTexto(formData, "reps"),
     loadKg: campoTexto(formData, "loadKg"),
@@ -730,7 +749,7 @@ export async function adicionarExercicioTemplateAction(splitId: string, template
   await prisma.workoutTemplateExercise.create({
     data: {
       splitId,
-      catalogId: catalogId ?? undefined,
+      catalogId: selectedExercise.catalogId ?? undefined,
       name: parsed.name,
       sets: parsed.sets,
       reps: parsed.reps,

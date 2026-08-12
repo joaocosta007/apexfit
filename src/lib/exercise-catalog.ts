@@ -5,6 +5,8 @@ export type ExerciseCatalogItem = {
   videoUrl: string | null;
 };
 
+export const CUSTOM_EXERCISE_VALUE = "__custom_exercise__";
+
 export const exerciseCatalog: ExerciseCatalogItem[] = [
   // ── Peitoral ──────────────────────────────────────────────────────────────
   { id: "supino-reto-maquina",            name: "Supino Reto Máquina",                    group: "Peitoral",          videoUrl: null },
