@@ -72,8 +72,6 @@ jobs:
             --request POST \
             --url "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
-            --data-urlencode "text=🔴 APEXFIT — APLICAÇÃO INACESSÍVEL
-
-O agendador externo não conseguiu acessar o ApexFit após três tentativas. Verifique a Vercel e o Supabase."
+            --data-urlencode "text=🔴 APEXFIT — APLICAÇÃO INACESSÍVEL"$'\n\n'"O agendador externo não conseguiu acessar o ApexFit após três tentativas. Verifique a Vercel e o Supabase."
 
           exit 1
