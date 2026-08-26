@@ -1,0 +1,79 @@
+name: Relatório do ApexFit no Telegram
+
+on:
+  schedule:
+    # O GitHub Actions usa UTC: 11h UTC = 8h em São Paulo.
+    - cron: "0 11 * * *"
+    # 1h UTC = 22h do dia anterior em São Paulo.
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      period:
+        description: Período do relatório de teste
+        required: true
+        default: morning
+        type: choice
+        options:
+          - morning
+          - evening
+
+jobs:
+  send-report:
+    name: Gerar e enviar relatório
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      REPORT_URL: ${{ vars.REPORT_URL }}
+      REPORT_CRON_SECRET: ${{ secrets.REPORT_CRON_SECRET }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+    steps:
+      - name: Definir período
+        id: report-period
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            period="${{ inputs.period }}"
+          elif [ "${{ github.event.schedule }}" = "0 1 * * *" ]; then
+            period="evening"
+          else
+            period="morning"
+          fi
+          echo "period=$period" >> "$GITHUB_OUTPUT"
+
+      - name: Solicitar relatório ao ApexFit
+        id: request-report
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [ -z "$REPORT_URL" ] || [ -z "$REPORT_CRON_SECRET" ]; then
+            echo "REPORT_URL ou REPORT_CRON_SECRET não configurado."
+            exit 1
+          fi
+
+          curl --fail --silent --show-error \
+            --retry 2 \
+            --retry-delay 10 \
+            --max-time 60 \
+            --header "Authorization: Bearer $REPORT_CRON_SECRET" \
+            "${REPORT_URL}?period=${{ steps.report-period.outputs.period }}"
+
+      - name: Alertar se o aplicativo estiver inacessível
+        if: steps.request-report.outcome == 'failure'
+        shell: bash
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
+            echo "Credenciais de contingência do Telegram não configuradas."
+            exit 1
+          fi
+
+          curl --fail --silent --show-error \
+            --request POST \
+            --url "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CHAT_ID}" \
+            --data-urlencode "text=🔴 APEXFIT — APLICAÇÃO INACESSÍVEL
+
+O agendador externo não conseguiu acessar o ApexFit após três tentativas. Verifique a Vercel e o Supabase."
+
+          exit 1

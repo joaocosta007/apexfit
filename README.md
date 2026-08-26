@@ -40,3 +40,19 @@ Todas as senhas são `123456`.
 4. Faça push do repositório para GitHub e conecte na Vercel.
 
 > Observação: o build executa `prisma generate`. Migrações de produção devem ser executadas conscientemente antes/depois do deploy, conforme seu fluxo.
+
+## Relatório diário no Telegram
+
+O sistema possui uma rota protegida que envia um relatório de saúde e utilização às 8h e às 22h (horário de São Paulo). O agendamento fica no GitHub Actions porque o plano Hobby da Vercel permite apenas uma execução agendada por dia.
+
+Configure na Vercel:
+
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+- `REPORT_CRON_SECRET`
+
+Configure nos segredos do repositório GitHub os mesmos três valores. Em **Settings → Secrets and variables → Actions → Variables**, crie também:
+
+- `REPORT_URL`: URL completa da rota em produção, por exemplo `https://seu-dominio.vercel.app/api/cron/telegram-report`
+
+O `REPORT_CRON_SECRET` deve ser idêntico na Vercel e no GitHub. Depois de configurar, execute manualmente o workflow **Relatório do ApexFit no Telegram** para validar a entrega antes de aguardar o próximo horário.
