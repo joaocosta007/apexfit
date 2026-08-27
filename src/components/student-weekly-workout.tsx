@@ -104,7 +104,7 @@ export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, per
         <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-apex-blue transition-[width] duration-normal ease-app" style={{ width: `${progress}%` }} /></div>
       </section>
 
-      {notice && <div className="mt-6">{notice}</div>}
+      {notice && <div className="!mt-0 pt-11">{notice}</div>}
 
       {plan.splits.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Divisões de treino">
