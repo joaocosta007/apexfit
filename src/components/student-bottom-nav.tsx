@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChartNoAxesCombined, ClipboardCheck, Dumbbell, UserRound } from "lucide-react";
+import { rememberStudentNavigation } from "@/components/student-page-transition";
 import { cn } from "@/lib/utils";
 
 type StudentBottomNavProps = {
@@ -22,7 +23,7 @@ export function StudentBottomNav({ active, onNavigate }: StudentBottomNavProps) 
   return (
     <nav aria-label="Navegação principal do aluno" className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-lg border-t border-border/80 bg-apex-surface/95 shadow-[0_-8px_24px_rgba(13,35,66,0.06)] backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] max-w-lg px-2">
-        {items.map(({ href, icon: Icon, label, key }) => {
+        {items.map(({ href, icon: Icon, label, key }, index) => {
           const isActive = active === key;
           return (
             <Link
@@ -30,6 +31,10 @@ export function StudentBottomNav({ active, onNavigate }: StudentBottomNavProps) 
               href={href}
               aria-current={isActive ? "page" : undefined}
               onClick={(event) => {
+                if (!isActive) {
+                  const activeIndex = items.findIndex((item) => item.key === active);
+                  rememberStudentNavigation(href, index > activeIndex ? "forward" : "backward");
+                }
                 if (onNavigate) {
                   event.preventDefault();
                   onNavigate(key);

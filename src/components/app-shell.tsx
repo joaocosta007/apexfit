@@ -1,5 +1,6 @@
 import { BrandMark } from "@/components/brand-mark";
 import { LogoutButton } from "@/components/logout-button";
+import { StudentPageTransition } from "@/components/student-page-transition";
 import { Bell } from "lucide-react";
 
 type AppShellProps = {
@@ -40,11 +41,13 @@ export function AppShell({ title, subtitle, children, action, variant = "default
         )}
 
         <div className={`flex-1 overflow-y-auto px-4 pt-5 ${bottomNav ? "pb-[calc(6.5rem+env(safe-area-inset-bottom))]" : "pb-6"}`}>
-          <div className={showPageHeader ? "mb-5" : "sr-only"}>
-            <h1 className="text-2xl font-black tracking-tight text-apex-ink">{title}</h1>
-            {subtitle && <p className="mt-1 text-sm font-medium text-apex-muted">{subtitle}</p>}
-          </div>
-          {children}
+          <StudentPageTransition>
+            <div className={showPageHeader ? "mb-5" : "sr-only"}>
+              <h1 className="text-2xl font-black tracking-tight text-apex-ink">{title}</h1>
+              {subtitle && <p className="mt-1 text-sm font-medium text-apex-muted">{subtitle}</p>}
+            </div>
+            {children}
+          </StudentPageTransition>
         </div>
 
         {bottomNav}

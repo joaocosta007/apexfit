@@ -92,6 +92,40 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  .student-screen-slide-forward {
+    animation: student-screen-slide-forward 280ms var(--ease-app) both;
+    will-change: opacity, transform;
+  }
+
+  .student-screen-slide-backward {
+    animation: student-screen-slide-backward 280ms var(--ease-app) both;
+    will-change: opacity, transform;
+  }
+}
+
+@keyframes student-screen-slide-forward {
+  from {
+    opacity: 0.45;
+    transform: translateX(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes student-screen-slide-backward {
+  from {
+    opacity: 0.45;
+    transform: translateX(-28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -99,5 +133,10 @@
   *::before,
   *::after {
     scroll-behavior: auto !important;
+  }
+
+  .student-screen-slide-forward,
+  .student-screen-slide-backward {
+    animation: none;
   }
 }
