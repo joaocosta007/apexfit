@@ -89,7 +89,7 @@ export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, per
 
   return (
     <div className="space-y-4">
-      <section className="sticky top-0 z-20 -mx-4 -mt-5 overflow-hidden bg-apex-navy px-5 pb-7 pt-10 text-white shadow-[0_8px_20px_rgba(13,35,66,0.18)]">
+      <section className="sticky top-0 z-20 -mx-4 -mt-5 -translate-y-5 overflow-hidden bg-apex-navy px-5 pb-7 pt-10 text-white shadow-[0_8px_20px_rgba(13,35,66,0.18)]">
         <span className="absolute -right-12 -top-10 h-44 w-44 rounded-full bg-blue-500/10" aria-hidden="true" />
         <span className="absolute right-10 -top-7 h-28 w-28 rounded-full bg-blue-500/20" aria-hidden="true" />
         <div className="relative flex items-start justify-between gap-4">
@@ -104,7 +104,7 @@ export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, per
         <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-apex-blue transition-[width] duration-normal ease-app" style={{ width: `${progress}%` }} /></div>
       </section>
 
-      {notice && <div className="!mt-0 pt-11">{notice}</div>}
+      {notice && <div className="!mt-0 pt-6">{notice}</div>}
 
       {plan.splits.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Divisões de treino">
