@@ -29,6 +29,7 @@ export function StudentBottomNav({ active, onNavigate }: StudentBottomNavProps) 
             <Link
               key={key}
               href={href}
+              prefetch
               aria-current={isActive ? "page" : undefined}
               onClick={(event) => {
                 if (!isActive) {
