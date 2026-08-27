@@ -383,6 +383,30 @@ export async function removerExercicioAction(exerciseId: string, studentId: stri
   revalidatePath(`/trainer/workouts/${studentId}`);
 }
 
+export async function ajustarExercicioAction(
+  exerciseId: string,
+  studentId: string,
+  field: "sets" | "reps" | "restTime",
+  value: string
+) {
+  const session = await requireRole(Role.TRAINER);
+  const exercise = await prisma.exercise.findFirst({
+    where: { id: exerciseId, split: { plan: { studentId, trainerId: session.user.id } } }
+  });
+
+  if (!exercise) throw new Error("Exercício não encontrado.");
+
+  if (field === "restTime") {
+    const seconds = Math.max(15, Math.min(600, Number.parseInt(value, 10) || 60));
+    await prisma.exercise.update({ where: { id: exerciseId }, data: { restTime: `${seconds}s` } });
+  } else {
+    const amount = Math.max(1, Math.min(50, Number.parseInt(value, 10) || 1));
+    await prisma.exercise.update({ where: { id: exerciseId }, data: { [field]: amount } });
+  }
+
+  revalidatePath(`/trainer/workouts/${studentId}`);
+}
+
 export async function enviarLembreteAction(studentId: string, dias: number) {
   const session = await requireRole(Role.TRAINER);
   await garantirAlunoDoProfessor(studentId, session.user.id);

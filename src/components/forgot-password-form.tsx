@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { solicitarRecuperacaoSenhaAction } from "@/app/actions";
+import { toast } from "sonner";
 
 export function ForgotPasswordForm() {
   const [error, setError] = useState("");
@@ -18,8 +19,12 @@ export function ForgotPasswordForm() {
     try {
       await solicitarRecuperacaoSenhaAction(formData);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro inesperado.";
-      if (!msg.includes("NEXT_REDIRECT")) setError(msg);
+      const msg = err instanceof Error ? err.message : "";
+      if (!msg.includes("NEXT_REDIRECT")) {
+        const friendlyMessage = "Não foi possível enviar o link agora. Tente novamente em alguns instantes.";
+        setError(friendlyMessage);
+        toast.error("Falha ao enviar o link", { description: friendlyMessage });
+      }
     } finally {
       setLoading(false);
     }
@@ -27,11 +32,7 @@ export function ForgotPasswordForm() {
 
   return (
     <form action={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <p className="sr-only" role="alert">{error}</p>}
 
       <div className="space-y-2">
         <Label htmlFor="email">E-mail</Label>

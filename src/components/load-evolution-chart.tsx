@@ -1,143 +1,125 @@
 "use client";
 
-import { useState } from "react";
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine
-} from "recharts";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CheckCircle2, TrendingUp } from "lucide-react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatarCarga } from "@/lib/utils";
 
-type ExerciseProgress = {
-  name: string;
-  data: { date: string; load: number }[];
+export type ExerciseProgress = { name: string; data: { date: string; load: number }[] };
+
+type LoadEvolutionChartProps = {
+  exercises: ExerciseProgress[];
+  completedWeekDays: number[];
+  weeklyGoal: number;
 };
 
-function formatDate(dateStr: string) {
-  const d = new Date(dateStr + "T12:00:00");
-  return d.toLocaleDateString("pt-BR", { month: "short" });
+const WEEK_DAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+function formatDateFull(date: string) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-function formatDateFull(dateStr: string) {
-  const [y, m, d] = dateStr.split("-");
-  return `${d}/${m}/${y}`;
+function aggregateLastEightWeeks(data: ExerciseProgress["data"]) {
+  const latestByWeek = new Map<string, { label: string; load: number; time: number }>();
+  data.forEach((entry) => {
+    const date = new Date(`${entry.date}T12:00:00`);
+    const monday = new Date(date);
+    const day = date.getDay();
+    monday.setDate(date.getDate() - (day === 0 ? 6 : day - 1));
+    const key = monday.toISOString().slice(0, 10);
+    const previous = latestByWeek.get(key);
+    if (!previous || date.getTime() >= previous.time) latestByWeek.set(key, { label: key, load: entry.load, time: date.getTime() });
+  });
+  return [...latestByWeek.values()].sort((a, b) => a.time - b.time).slice(-8).map((entry, index) => ({ ...entry, week: `S${index + 1}` }));
 }
 
-export function LoadEvolutionChart({ exercises }: { exercises: ExerciseProgress[] }) {
-  const sorted = [...exercises].sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+export function LoadEvolutionChart({ exercises, completedWeekDays, weeklyGoal }: LoadEvolutionChartProps) {
+  const sorted = useMemo(() => [...exercises].sort((a, b) => b.data.length - a.data.length), [exercises]);
   const [selectedName, setSelectedName] = useState(sorted[0]?.name ?? "");
-
-  const selected = sorted.find((e) => e.name === selectedName);
-  const data = selected?.data ?? [];
-
-  const firstLoad   = data[0]?.load ?? 0;
-  const bestLoad    = data.length > 0 ? Math.max(...data.map(d => d.load)) : 0;
-  const lastLoad    = data[data.length - 1]?.load ?? 0;
-  const improvement = firstLoad > 0 ? ((lastLoad - firstLoad) / firstLoad) * 100 : 0;
-  const hasData     = data.length >= 2;
-
-  const ImprovementIcon  = improvement > 0 ? TrendingUp : improvement < 0 ? TrendingDown : Minus;
-  const improvementColor = improvement > 0 ? "text-green-600" : improvement < 0 ? "text-red-500" : "text-slate-500";
+  const selected = sorted.find((exercise) => exercise.name === selectedName) ?? sorted[0];
+  const weeklyData = aggregateLastEightWeeks(selected?.data ?? []);
+  const firstLoad = weeklyData[0]?.load ?? selected?.data[0]?.load ?? 0;
+  const currentLoad = weeklyData.at(-1)?.load ?? selected?.data.at(-1)?.load ?? 0;
+  const gain = currentLoad - firstLoad;
+  const latestSessions = [...(selected?.data ?? [])].reverse().slice(0, 3);
 
   return (
     <div className="space-y-4">
-      {/* Selector */}
-      <div className="relative">
-        <select
-          value={selectedName}
-          onChange={(e) => setSelectedName(e.target.value)}
-          className="app-card w-full appearance-none px-4 py-3.5 pr-10 text-sm font-bold text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-        >
-          {sorted.map((e) => (
-            <option key={e.name} value={e.name}>{e.name}</option>
-          ))}
-        </select>
-        <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">▾</div>
-      </div>
-
-      {/* Stat chips */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="app-card p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Início</p>
-          <p className="mt-1 text-lg font-black text-slate-900">{formatarCarga(firstLoad)}</p>
-        </div>
-        <div className="app-card p-4">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Melhor</p>
-          <p className="mt-1 text-lg font-black text-slate-900">{formatarCarga(bestLoad)}</p>
-        </div>
-        <div className={`rounded-[22px] border p-4 shadow-sm ${improvement > 0 ? "border-green-100 bg-green-50" : improvement < 0 ? "border-red-100 bg-red-50" : "border-slate-200 bg-white"}`}>
-          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Progresso</p>
-          <div className={`mt-1 flex items-center gap-0.5 ${improvementColor}`}>
-            <ImprovementIcon className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="text-lg font-black">
-              {improvement >= 0 ? "+" : ""}{improvement.toFixed(0)}%
-            </span>
+      <section className="app-card p-5" aria-labelledby="weekly-frequency-title">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p id="weekly-frequency-title" className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Frequência semanal</p>
+            <p className="mt-2 text-3xl font-black text-apex-navy">{completedWeekDays.length}<span className="text-base font-bold text-apex-muted"> / 7 dias</span></p>
           </div>
+          <span className="flex items-center gap-1 rounded-2xl bg-blue-100 px-3 py-2 text-sm font-extrabold text-apex-blue"><CheckCircle2 className="h-4 w-4" /> Meta: {weeklyGoal || 0}×</span>
         </div>
-      </div>
+        <div className="mt-5 grid grid-cols-7 gap-2">
+          {WEEK_DAYS.map((day, index) => {
+            const completed = completedWeekDays.includes(index);
+            return (
+              <div key={day} className="text-center">
+                <span className={`flex aspect-square items-center justify-center rounded-xl border text-base font-black ${completed ? "border-apex-green bg-apex-green text-white" : "border-slate-200 bg-apex-soft text-slate-300"}`}>{completed ? "✓" : ""}</span>
+                <span className={`mt-2 block text-[10px] font-bold ${completed ? "text-apex-green" : "text-slate-400"}`}>{day}</span>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
-      {/* Chart */}
-      <div className="app-card p-5">
-        <p className="mb-3 text-sm font-bold text-slate-900">Histórico de Carga</p>
-
-        {!hasData ? (
-          <div className="flex flex-col items-center py-10 text-center">
-            <TrendingUp className="mb-3 h-10 w-10 text-slate-200" />
-            <p className="text-sm font-semibold text-slate-400">
-              {data.length === 0 ? "Sem registros ainda" : "Faça mais treinos para ver o gráfico"}
-            </p>
-          </div>
-        ) : (
-          <>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={data} margin={{ top: 5, right: 8, left: -12, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 10, fill: "#94a3b8" }}
-                  tickFormatter={formatDate}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 10, fill: "#94a3b8" }}
-                  tickFormatter={(v) => `${v}`}
-                  domain={["auto", "auto"]}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <ReferenceLine y={bestLoad} stroke="#3B82F6" strokeDasharray="4 4" strokeOpacity={0.4} />
-                <Tooltip
-                  formatter={(value) => [formatarCarga(typeof value === "number" ? value : 0), "Carga"]}
-                  labelFormatter={(label) => typeof label === "string" ? formatDateFull(label) : String(label)}
-                  contentStyle={{ borderRadius: "12px", border: "1px solid #E2E8F0", fontSize: "12px", boxShadow: "0 4px 14px rgba(0,0,0,0.08)" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="load"
-                  stroke="#3B82F6"
-                  strokeWidth={3}
-                  dot={{ fill: "#3B82F6", r: 5, strokeWidth: 0 }}
-                  activeDot={{ r: 7, strokeWidth: 0, fill: "#2563EB" }}
-                />
+      {sorted.length === 0 ? (
+        <section className="app-card flex min-h-56 flex-col items-center justify-center px-8 text-center">
+          <TrendingUp className="h-9 w-9 text-slate-300" />
+          <h2 className="mt-4 text-lg font-black text-apex-navy">Seu progresso começa no primeiro treino</h2>
+          <p className="mt-2 text-sm font-medium leading-relaxed text-apex-muted">Registre as cargas dos exercícios para acompanhar sua evolução aqui.</p>
+        </section>
+      ) : (
+        <>
+      <section className="app-card overflow-hidden p-5" aria-labelledby="load-evolution-title">
+        <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Evolução de carga</p>
+        <h2 id="load-evolution-title" className="mt-1 text-xl font-black text-apex-navy">Últimas 8 semanas</h2>
+        <div className="-mx-1 mt-5 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Selecionar exercício">
+          {sorted.map((exercise) => {
+            const active = exercise.name === selected?.name;
+            return <button key={exercise.name} type="button" role="tab" aria-selected={active} onClick={() => setSelectedName(exercise.name)} className={`focus-app shrink-0 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-colors ${active ? "bg-apex-navy text-white" : "bg-apex-soft text-apex-muted hover:text-apex-navy"}`}>{exercise.name}</button>;
+          })}
+        </div>
+        <div className="mt-5 grid grid-cols-3 gap-3">
+          <Metric label="Início" value={formatarCarga(firstLoad)} />
+          <Metric label="Atual" value={formatarCarga(currentLoad)} highlight="blue" />
+          <Metric label="Ganho" value={`${gain >= 0 ? "+" : ""}${formatarCarga(gain)}`} highlight={gain >= 0 ? "green" : undefined} />
+        </div>
+        {weeklyData.length >= 2 ? (
+          <div className="mt-5 h-52 min-w-0 w-full" aria-label={`Gráfico de carga de ${selected?.name}`}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} initialDimension={{ width: 320, height: 208 }}>
+              <LineChart data={weeklyData} margin={{ top: 10, right: 6, left: -18, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="#e2e8f0" strokeDasharray="4 4" />
+                <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                <YAxis axisLine={false} tickLine={false} width={42} tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                <Tooltip formatter={(value) => [formatarCarga(Number(value)), "Carga"]} labelFormatter={(_, payload) => payload[0]?.payload?.label ? formatDateFull(payload[0].payload.label) : ""} contentStyle={{ borderRadius: 14, border: "1px solid #e2e8f0", boxShadow: "0 8px 24px rgba(13,35,66,.12)", fontSize: 12 }} />
+                <Line type="monotone" dataKey="load" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: "#2563eb", strokeWidth: 0 }} activeDot={{ r: 6, fill: "#2563eb", strokeWidth: 0 }} />
               </LineChart>
             </ResponsiveContainer>
-            <div className="mt-2 flex items-center justify-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              <span className="text-xs text-slate-400">Recorde Pessoal: {formatarCarga(bestLoad)}</span>
-            </div>
-          </>
+          </div>
+        ) : (
+          <div className="mt-5 flex min-h-40 flex-col items-center justify-center rounded-2xl bg-apex-soft px-6 text-center">
+            <TrendingUp className="h-8 w-8 text-slate-300" /><p className="mt-3 text-sm font-bold text-apex-navy">Mais um registro libera o gráfico</p><p className="mt-1 text-xs text-apex-muted">Continue registrando suas cargas neste exercício.</p>
+          </div>
         )}
-      </div>
+      </section>
 
-      {/* Motivacional */}
-      {hasData && improvement > 0 && (
-        <div className="rounded-2xl bg-white p-5 text-center shadow-sm">
-          <p className="text-2xl">📊</p>
-          <p className="mt-1 font-bold text-slate-900">Continue treinando!</p>
-          <p className="mt-1 text-sm text-slate-400">Seus ganhos estão impressionantes. Mantenha a consistência!</p>
+      <section className="app-card p-5" aria-labelledby="recent-workouts-title">
+        <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-slate-400">Últimos treinos</p>
+        <h2 id="recent-workouts-title" className="mt-1 text-xl font-black text-apex-navy">Histórico</h2>
+        <div className="mt-4 divide-y divide-slate-100">
+          {latestSessions.map((session, index) => <div key={`${session.date}-${session.load}-${index}`} className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"><div><p className="text-sm font-extrabold text-apex-navy">{selected?.name}</p><p className="mt-0.5 text-xs font-medium text-apex-muted">{formatDateFull(session.date)}</p></div><span className="rounded-xl bg-apex-soft px-3 py-2 text-sm font-black text-apex-blue">{formatarCarga(session.load)}</span></div>)}
         </div>
+      </section>
+        </>
       )}
     </div>
   );
+}
+
+function Metric({ label, value, highlight }: { label: string; value: string; highlight?: "blue" | "green" }) {
+  return <div className={`rounded-2xl p-3.5 ${highlight === "green" ? "bg-green-100" : "bg-apex-soft"}`}><p className="text-[11px] font-bold text-slate-400">{label}</p><p className={`mt-1 whitespace-nowrap text-lg font-black ${highlight === "green" ? "text-apex-green" : highlight === "blue" ? "text-apex-blue" : "text-slate-400"}`}>{value}</p></div>;
 }

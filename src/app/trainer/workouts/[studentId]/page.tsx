@@ -15,6 +15,7 @@ import { ApplyTemplateForm } from "@/components/apply-template-form";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmButton } from "@/components/confirm-button";
 import { DayToggleFields } from "@/components/day-toggle-fields";
+import { ExerciseQuickAdjust } from "@/components/exercise-quick-adjust";
 import { ExerciseSelectorFields } from "@/components/exercise-selector-fields";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -122,10 +123,12 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
       }
     >
       <section className="space-y-5">
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle>Configuração do plano</CardTitle>
-            <CardDescription>Defina o nome do plano e os dias de treino da semana.</CardDescription>
+            <div className="flex items-start justify-between gap-3">
+              <div><CardTitle>Plano de treino</CardTitle><CardDescription>Nome, protocolo e dias da semana.</CardDescription></div>
+              {plan && <Badge className="bg-green-100 text-green-700">Ativo</Badge>}
+            </div>
           </CardHeader>
           <CardContent>
             <form action={salvarPlano} className="space-y-5">
@@ -163,7 +166,7 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
         </Card>
 
         {!plan ? (
-          <Card>
+          <Card className="border-amber-200 bg-amber-50/60">
             <CardContent className="pt-5">
               <p className="font-semibold text-slate-900">Nenhum plano ativo encontrado.</p>
               <p className="mt-2 text-sm text-slate-600">
@@ -174,7 +177,7 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
         ) : null}
 
         {plan && templates.length > 0 ? (
-          <Card>
+          <Card className="overflow-hidden">
             <CardHeader>
               <CardTitle>Carregar template</CardTitle>
               <CardDescription>
@@ -192,8 +195,8 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
             <CardHeader>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <CardTitle>Divisões de treino</CardTitle>
-                  <CardDescription>Use abas horizontais para alternar entre A, B, C e novas divisões.</CardDescription>
+                  <CardTitle>Divisões e exercícios</CardTitle>
+                  <CardDescription>Alterne entre divisões e ajuste a ficha rapidamente.</CardDescription>
                 </div>
                 <form action={adicionarDivisaoAction.bind(null, plan.id, student.id)}>
                   <Button type="submit" variant="secondary" size="icon" aria-label="Adicionar divisão">
@@ -224,10 +227,10 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
                           {planTypeConfig[plan.planType].hint}
                         </div>
                       )}
-                      <div className="mb-4 flex items-center justify-between">
+                      <div className="mb-4 flex items-center justify-between gap-3">
                         <div>
                           <h3 className="text-xl font-black text-slate-900">{split.splitName}</h3>
-                          <p className="text-sm text-slate-600">{split.exercises.length} exercícios cadastrados</p>
+                          <p className="text-sm text-slate-500">{split.exercises.length} {split.exercises.length === 1 ? "exercício" : "exercícios"}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant="outline">Divisão {split.sortOrder + 1}</Badge>
@@ -248,13 +251,14 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
                           </div>
                         ) : null}
 
-                        {split.exercises.map((exercise) => (
-                          <div key={exercise.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        {split.exercises.map((exercise, exerciseIndex) => (
+                          <div key={exercise.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card">
                             <div className="flex items-start gap-3">
+                              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-xs font-black text-apex-blue">{exerciseIndex + 1}</span>
                               <div className="min-w-0 flex-1">
-                                <h4 className="font-bold text-slate-900">{exercise.name}</h4>
+                                <h4 className="font-black text-apex-navy">{exercise.name}</h4>
                                 <p className="mt-1 text-sm text-slate-600">
-                                  {exercise.sets} séries • {exercise.reps} reps • {formatarCarga(exercise.loadKg)} • descanso {exercise.restTime}
+                                  {formatarCarga(exercise.loadKg)} de carga atual
                                 </p>
                               </div>
                               <form action={removerExercicioAction.bind(null, exercise.id, student.id)}>
@@ -263,12 +267,17 @@ export default async function WorkoutBuilderPage({ params }: WorkoutBuilderPageP
                                 </Button>
                               </form>
                             </div>
+                            <div className="mt-4 grid grid-cols-3 gap-2">
+                              <ExerciseQuickAdjust exerciseId={exercise.id} studentId={student.id} field="sets" value={exercise.sets} label="Séries" />
+                              <ExerciseQuickAdjust exerciseId={exercise.id} studentId={student.id} field="reps" value={exercise.reps} label="Reps" />
+                              <ExerciseQuickAdjust exerciseId={exercise.id} studentId={student.id} field="restTime" value={Number.parseInt(exercise.restTime, 10) || 60} label="Descanso" suffix="s" min={15} step={15} />
+                            </div>
                           </div>
                         ))}
                       </div>
 
-                      <form action={adicionarExercicioAction.bind(null, split.id, student.id)} className="space-y-4 rounded-xl border border-blue-100 bg-blue-50 p-4">
-                        <h4 className="font-bold text-slate-900">Adicionar exercício</h4>
+                      <form action={adicionarExercicioAction.bind(null, split.id, student.id)} className="space-y-4 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+                        <div><h4 className="font-black text-apex-navy">Adicionar exercício</h4><p className="mt-1 text-xs text-apex-muted">Escolha do catálogo ou digite um exercício personalizado.</p></div>
                         <ExerciseSelectorFields fieldId={`catalogId-${split.id}`} />
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-2">

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { ServiceWorkerInit } from "@/components/service-worker-init";
+import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1E40AF",
+  themeColor: "#0d2342",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ServiceWorkerInit />
         {children}
+        <Toaster />
       </body>
     </html>
   );

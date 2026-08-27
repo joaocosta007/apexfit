@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function AppError({
   error,
@@ -15,11 +16,15 @@ export default function AppError({
 }) {
   useEffect(() => {
     console.error("ApexFit server error", error);
+    toast.error("Não foi possível carregar esta página", {
+      id: "app-load-error",
+      description: "Tente novamente em alguns instantes."
+    });
   }, [error]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f5f7fb] px-5 py-10">
-      <section className="w-full max-w-md rounded-[24px] border border-slate-200 bg-white p-7 text-center shadow-[0_2px_10px_rgba(15,23,42,0.09)]">
+    <main className="flex min-h-screen items-center justify-center bg-apex-background px-5 py-10">
+      <section className="w-full max-w-md rounded-card border border-slate-200 bg-apex-surface p-7 text-center shadow-floating">
         <div className="mb-6 flex justify-center">
           <BrandMark />
         </div>

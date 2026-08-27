@@ -1,45 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, Dumbbell, House, TrendingUp } from "lucide-react";
+import { ChartNoAxesCombined, ClipboardCheck, Dumbbell, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type StudentBottomNavProps = {
-  active: "dashboard" | "workout" | "progress" | "assessments";
+  active: "workout" | "progress" | "assessments" | "profile";
+  onNavigate?: (item: StudentNavKey) => void;
 };
 
+type StudentNavKey = StudentBottomNavProps["active"];
+
 const items = [
-  { href: "/student/dashboard",      icon: House,           label: "Início",    key: "dashboard"   },
-  { href: "/student/workouts/today", icon: Dumbbell,        label: "Treino",    key: "workout"     },
-  { href: "/student/progress",       icon: TrendingUp,      label: "Evolução",  key: "progress"    },
-  { href: "/student/assessments",    icon: ClipboardList,   label: "Avaliações", key: "assessments" },
+  { href: "/student/workouts/today", icon: Dumbbell,             label: "Treino",     key: "workout"     },
+  { href: "/student/progress",       icon: ChartNoAxesCombined,  label: "Progresso",  key: "progress"    },
+  { href: "/student/assessments",    icon: ClipboardCheck,       label: "Avaliações", key: "assessments" },
+  { href: "/student/dashboard",      icon: UserRound,            label: "Perfil",      key: "profile"     },
 ] as const;
 
-export function StudentBottomNav({ active }: StudentBottomNavProps) {
+export function StudentBottomNav({ active, onNavigate }: StudentBottomNavProps) {
   return (
-    <nav className="safe-bottom z-20 flex-shrink-0 border-t border-slate-200 bg-white/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-[76px] max-w-lg">
+    <nav aria-label="Navegação principal do aluno" className="safe-bottom z-40 flex-shrink-0 border-t border-border/80 bg-apex-surface/95 shadow-[0_-8px_24px_rgba(13,35,66,0.06)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[72px] max-w-lg px-2">
         {items.map(({ href, icon: Icon, label, key }) => {
           const isActive = active === key;
           return (
             <Link
               key={key}
               href={href}
+              aria-current={isActive ? "page" : undefined}
+              onClick={(event) => {
+                if (onNavigate) {
+                  event.preventDefault();
+                  onNavigate(key);
+                }
+              }}
               className={cn(
-                "relative flex flex-1 flex-col items-center justify-center gap-1 border-t-2 transition-colors",
-                isActive ? "border-blue-600 bg-blue-50/40" : "border-transparent"
+                "tap-feedback focus-app group relative flex min-h-12 flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-apex-muted transition-colors duration-fast ease-app",
+                isActive ? "text-apex-blue" : "hover:bg-apex-soft hover:text-apex-ink"
               )}
             >
-              <Icon
-                className={cn(
-                  "h-[22px] w-[22px] transition-colors",
-                  isActive ? "text-blue-600" : "text-slate-400"
-                )}
-              />
-              <span className={cn(
-                "text-[11px] font-bold transition-colors",
-                isActive ? "text-blue-600" : "text-slate-400"
-              )}>
+              <span className={cn("flex h-9 min-w-12 items-center justify-center rounded-[14px] transition-all duration-normal ease-app", isActive && "bg-blue-100")}>
+                <Icon aria-hidden="true" className={cn("h-[22px] w-[22px] transition-transform duration-fast", isActive && "scale-105")} />
+              </span>
+              <span className="text-[11px] font-bold leading-none">
                 {label}
               </span>
             </Link>

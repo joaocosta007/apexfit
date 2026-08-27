@@ -1,24 +1,36 @@
-import Link from "next/link";
 import { Role } from "@prisma/client";
-import { ClipboardList, Flame, Play, Target, Trophy } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { ProfileWeekDay, StudentProfileView } from "@/components/student-profile-view";
 import { StudentBottomNav } from "@/components/student-bottom-nav";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
-import { formatarCarga } from "@/lib/utils";
-import { indicesDiasTreino } from "@/lib/workout";
+import { diasDaSemana } from "@/lib/utils";
+import { normalizarDiasTreino } from "@/lib/workout";
 
-function calcularStreak(dates: string[]): number {
-  if (dates.length === 0) return 0;
-  const sorted = [...new Set(dates)].sort().reverse();
-  const today     = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
-  if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+function dateKey(date: Date) {
+  return date.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+}
+
+function startOfWeek(date = new Date()) {
+  const start = new Date(date);
+  const jsDay = start.getDay();
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - (jsDay === 0 ? 6 : jsDay - 1));
+  return start;
+}
+
+function calculateStreak(dates: Date[]) {
+  const unique = [...new Set(dates.map(dateKey))].sort().reverse();
+  if (!unique.length) return 0;
+  const today = dateKey(new Date());
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  if (unique[0] !== today && unique[0] !== dateKey(yesterdayDate)) return 0;
   let streak = 1;
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = new Date(sorted[i - 1]).getTime();
-    const curr = new Date(sorted[i]).getTime();
-    if ((prev - curr) / 86_400_000 === 1) streak++;
+  for (let index = 1; index < unique.length; index++) {
+    const previous = new Date(`${unique[index - 1]}T12:00:00`).getTime();
+    const current = new Date(`${unique[index]}T12:00:00`).getTime();
+    if (Math.round((previous - current) / 86_400_000) === 1) streak += 1;
     else break;
   }
   return streak;
@@ -27,136 +39,52 @@ function calcularStreak(dates: string[]): number {
 export default async function StudentDashboardPage() {
   const session = await requireRole(Role.STUDENT);
   const userId = session.user.id;
-
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-
-  const [user, plan, logs, anamnese] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
+  const [user, plan, logs] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { name: true, createdAt: true } }),
     prisma.workoutPlan.findFirst({
       where: { studentId: userId, isActive: true },
       select: {
         planName: true,
         trainingDays: true,
-        splits: {
-          orderBy: { sortOrder: "asc" },
-          take: 1,
-          select: {
-            splitName: true,
-            exercises: { take: 3, select: { name: true } }
-          }
-        }
-      }
+        splits: { orderBy: { sortOrder: "asc" }, select: { splitName: true, exercises: { take: 2, select: { name: true } } } },
+      },
     }),
-    prisma.workoutLog.findMany({
-      where: { studentId: userId },
-      orderBy: { date: "desc" },
-      select: { date: true, completedLoadKg: true, exercise: { select: { name: true } } }
-    }),
-    prisma.anamnese.findUnique({ where: { studentId: userId } })
+    prisma.workoutLog.findMany({ where: { studentId: userId }, orderBy: { date: "desc" }, select: { date: true } }),
   ]);
 
-  const allDates  = logs.map(l => l.date.toISOString().slice(0, 10));
-  const streak    = calcularStreak(allDates);
-  // Conta dias únicos de treino (não registros individuais de exercício)
-  const thisWeek  = new Set(logs.filter(l => l.date >= weekAgo).map(l => l.date.toISOString().slice(0, 10))).size;
-  const metaDias  = plan ? indicesDiasTreino(plan.trainingDays).length : 0;
+  const name = user?.name ?? session.user.name ?? "Aluno";
+  const createdAt = user?.createdAt ?? new Date();
+  const uniqueWorkoutDays = new Set(logs.map((log) => dateKey(log.date)));
+  const weekStart = startOfWeek();
+  const completedThisWeek = new Set(logs.filter((log) => log.date >= weekStart).map((log) => dateKey(log.date)));
+  const trainingDays = plan ? normalizarDiasTreino(plan.trainingDays) : [];
 
-  const recordMap: Record<string, number> = {};
-  for (const log of logs) {
-    const name = log.exercise.name;
-    if (!recordMap[name] || log.completedLoadKg > recordMap[name]) recordMap[name] = log.completedLoadKg;
-  }
-  const recordes = Object.entries(recordMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const weekDays: ProfileWeekDay[] = diasDaSemana.map((day, index) => {
+    const trainingPosition = trainingDays.findIndex((trainingDay) => trainingDay.indice === index);
+    const split = trainingPosition >= 0 && plan?.splits.length ? plan.splits[trainingPosition % plan.splits.length] : null;
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + index);
+    const completed = Boolean(split && completedThisWeek.has(dateKey(date)));
+    return {
+      short: ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"][index],
+      name: day.nome,
+      title: split?.splitName ?? "Descanso",
+      detail: split?.exercises.map((exercise) => exercise.name).join(" · ") || (split ? plan?.planName ?? "Treino programado" : "Recuperação"),
+      isTraining: Boolean(split),
+      completed,
+    };
+  });
 
-  const firstName = user?.name.split(" ")[0] ?? "Aluno";
-
-  const trophyColor = (i: number) =>
-    i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : "text-amber-700/60";
+  const weeks = Math.max(0, Math.floor((weekStart.getTime() - createdAt.getTime()) / (7 * 86_400_000)));
+  const memberSince = createdAt.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }).replace(/^./, (letter) => letter.toUpperCase());
+  const exportData = {
+    profile: { name, memberSince: createdAt.toISOString(), totalWorkouts: uniqueWorkoutDays.size, currentStreak: calculateStreak(logs.map((log) => log.date)) },
+    activePlan: plan ? { name: plan.planName, trainingDays: weekDays.filter((day) => day.isTraining).map((day) => day.name) } : null,
+  };
 
   return (
-    <AppShell
-      title={`Olá, ${firstName}! 👋`}
-      subtitle="Pronto para treinar hoje?"
-      variant="student"
-      userName={user?.name}
-      bottomNav={<StudentBottomNav active="dashboard" />}
-    >
-      <div className="mb-5 grid grid-cols-2 gap-3">
-        <div className="app-card p-5">
-          <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-500"><Flame className="h-5 w-5 text-amber-500" /> Sequência</div>
-          <p className="text-4xl font-black tracking-tight text-slate-900">{streak}</p>
-          <p className="text-sm font-medium text-slate-500">dias seguidos</p>
-          <div className="mt-4 flex gap-1.5">{Array.from({ length: 7 }).map((_, index) => <span key={index} className={`h-2 flex-1 rounded-full ${index < Math.min(streak, 7) ? "bg-amber-500" : "bg-slate-100"}`} />)}</div>
-        </div>
-        <div className="app-card p-5">
-          <div className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-500"><Target className="h-5 w-5 text-blue-600" /> Meta semanal</div>
-          <p className="text-4xl font-black tracking-tight text-slate-900">{thisWeek}<span className="text-xl text-slate-500">/{metaDias || 0}</span></p>
-          <p className="text-sm font-medium text-slate-500">dias de treino</p>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-600" style={{ width: `${metaDias ? Math.min((thisWeek / metaDias) * 100, 100) : 0}%` }} /></div>
-        </div>
-      </div>
-
-      {plan && (
-        <Link href="/student/workouts/today" className="app-card mb-6 block p-5 transition-transform active:scale-[0.99]">
-          <div className="flex items-center justify-between gap-4">
-            <div className="min-w-0 flex-1">
-              <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-600">Treino de hoje</span>
-              <h2 className="mt-3 truncate text-lg font-black text-slate-900">{plan.splits[0]?.splitName ?? plan.planName}</h2>
-              <p className="mt-1 text-sm text-slate-500">{plan.splits[0]?.exercises.length ?? 0} exercícios · ~45 min</p>
-            </div>
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-white"><Play className="ml-0.5 h-7 w-7 fill-white" /></span>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">{plan.splits[0]?.exercises.map((exercise) => <span key={exercise.name} className="rounded-full bg-[#f1f5fb] px-3 py-1.5 text-xs font-semibold text-slate-500">{exercise.name}</span>)}</div>
-        </Link>
-      )}
-
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-black text-slate-900">Recordes pessoais</h2>
-        <Link href="/student/progress" className="text-sm font-bold text-blue-600">Ver evolução</Link>
-      </div>
-      <div className="mb-6 grid grid-cols-3 gap-3">
-        {recordes.length === 0 ? <div className="app-card col-span-3 p-5 text-sm text-slate-500">Complete seus primeiros treinos para ver seus recordes.</div> : recordes.slice(0, 3).map(([name, load], i) => (
-          <div key={name} className="app-card flex min-w-0 flex-col items-center p-4 text-center">
-            <Trophy className={`mb-2 h-5 w-5 ${trophyColor(i)}`} />
-            <span className="text-lg font-black text-slate-900">{formatarCarga(load)}</span>
-            <span className="w-full truncate text-xs font-medium text-slate-500">{name}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Anamnese */}
-      {!anamnese ? (
-        <div className="app-card border-l-4 border-l-amber-500 p-5">
-          <div className="mb-3 flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-50">
-              <ClipboardList className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="font-bold text-slate-900">Complete sua anamnese</p>
-              <p className="text-sm text-slate-500">Ajude seu professor a personalizar seu treino</p>
-            </div>
-          </div>
-          <Link
-            href="/student/anamnese"
-            className="block w-full rounded-xl bg-blue-600 py-2.5 text-center text-sm font-bold text-white"
-          >
-            Preencher
-          </Link>
-        </div>
-      ) : (
-        <Link
-          href="/student/anamnese"
-          className="app-card flex items-center gap-3 border-l-4 border-l-blue-600 px-5 py-4"
-        >
-          <span className="text-xl">✅</span>
-          <div>
-            <p className="font-bold text-slate-900">Anamnese preenchida</p>
-            <p className="text-xs text-slate-500">Toque para atualizar suas informações</p>
-          </div>
-        </Link>
-      )}
-
+    <AppShell title="Perfil" variant="student" userName={name} showPageHeader={false} hideStudentTopBar bottomNav={<StudentBottomNav active="profile" />}>
+      <StudentProfileView name={name} memberSince={memberSince} totalWorkouts={uniqueWorkoutDays.size} streak={calculateStreak(logs.map((log) => log.date))} weeks={weeks} weekDays={weekDays} exportData={exportData} />
     </AppShell>
   );
 }

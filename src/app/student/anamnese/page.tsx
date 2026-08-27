@@ -53,7 +53,7 @@ export default async function StudentAnamnesePage({
           </Link>
         </Button>
       }
-      bottomNav={<StudentBottomNav active="dashboard" />}
+      bottomNav={<StudentBottomNav active="profile" />}
     >
       {salvo && (
         <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
@@ -63,7 +63,7 @@ export default async function StudentAnamnesePage({
 
       <form action={salvarAnamneseAction} className="space-y-5">
         {/* ── dados básicos ── */}
-        <Card>
+        <Card id="dados-basicos" className="scroll-mt-5">
           <CardHeader>
             <CardTitle>Dados básicos</CardTitle>
           </CardHeader>
@@ -99,7 +99,7 @@ export default async function StudentAnamnesePage({
         </Card>
 
         {/* ── objetivo ── */}
-        <Card>
+        <Card id="objetivos" className="scroll-mt-5">
           <CardHeader>
             <CardTitle>Objetivo principal</CardTitle>
             <CardDescription>O que você quer alcançar com os treinos?</CardDescription>

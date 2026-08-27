@@ -1,146 +1,150 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import confetti from "canvas-confetti";
+import { CheckCircle2, Flame } from "lucide-react";
+import { toast } from "sonner";
 import { ExerciseExecutionCard } from "@/components/exercise-execution-card";
+import { Button } from "@/components/ui/button";
 import { cn, diasDaSemana } from "@/lib/utils";
 import { normalizarDiasTreino, selecionarIndiceSplitPorDia } from "@/lib/workout";
+
+type WorkoutExercise = {
+  id: string;
+  name: string;
+  group: string;
+  sets: number;
+  reps: number;
+  loadKg: number;
+  restTime: string;
+  lastLoad: number | null;
+  videoUrl: string | null;
+};
 
 type StudentWeeklyWorkoutProps = {
   plan: {
     planName: string;
     trainerName: string;
     trainingDays: unknown;
-    splits: Array<{
-      id: string;
-      splitName: string;
-      sortOrder: number;
-      exercises: Array<{
-        id: string;
-        name: string;
-        sets: number;
-        reps: number;
-        loadKg: number;
-        restTime: string;
-        lastLoad: number | null;
-        videoUrl: string | null;
-      }>;
-    }>;
+    splits: Array<{ id: string; splitName: string; sortOrder: number; exercises: WorkoutExercise[] }>;
   };
   todayIndex: number;
+  todayLabel?: string;
+  streak?: number;
+  persist?: boolean;
 };
 
-/** Retorna os nomes curtos dos dias associados a um split (ex: ["Seg", "Qui"]) */
 function diasDoSplit(trainingDays: unknown, splitIndex: number, splitCount: number): string[] {
   const dias = normalizarDiasTreino(trainingDays);
-  return dias
-    .filter((_, pos) => pos % splitCount === splitIndex)
-    .map((dia) => dia.nome.slice(0, 3));
+  return dias.filter((_, position) => position % splitCount === splitIndex).map((day) => day.nome.slice(0, 3));
 }
 
-export function StudentWeeklyWorkout({ plan, todayIndex }: StudentWeeklyWorkoutProps) {
+function displaySplitName(splitName: string) {
+  const [title, ...description] = splitName.split(/\s+[—–-]\s+/);
+  return { title, description: description.join(" — ") };
+}
+
+/** Experiência completa de treino do aluno, com progresso por série e celebração final. */
+export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, persist = true }: StudentWeeklyWorkoutProps) {
   const todaySplitIndex = selecionarIndiceSplitPorDia(plan.trainingDays, plan.splits.length, todayIndex);
   const [selectedSplitIndex, setSelectedSplitIndex] = useState(todaySplitIndex ?? 0);
-  const [completedMap, setCompletedMap] = useState<Record<string, boolean>>({});
+  const selectedSplit = plan.splits[selectedSplitIndex];
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(selectedSplit?.exercises[0]?.id ?? null);
+  const [completedSetsMap, setCompletedSetsMap] = useState<Record<string, number>>({});
+  const celebratedRef = useRef(false);
 
-  const handleCompletedChange = useCallback((exerciseId: string, completed: boolean) => {
-    setCompletedMap((prev) => ({ ...prev, [exerciseId]: completed }));
+  const totalSets = useMemo(() => selectedSplit?.exercises.reduce((total, exercise) => total + exercise.sets, 0) ?? 0, [selectedSplit]);
+  const completedSets = useMemo(() => selectedSplit?.exercises.reduce((total, exercise) => total + (completedSetsMap[exercise.id] ?? 0), 0) ?? 0, [completedSetsMap, selectedSplit]);
+  const progress = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+  const allSetsCompleted = totalSets > 0 && completedSets === totalSets;
+  const isRestDay = todaySplitIndex === null;
+  const selectedName = displaySplitName(selectedSplit?.splitName ?? plan.planName);
+
+  const celebrate = useCallback(() => {
+    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      void confetti({ particleCount: 120, spread: 75, origin: { y: 0.72 }, colors: ["#2563eb", "#22c55e", "#f97316", "#ffffff"] });
+    }
+    toast.success("Treino concluído!", { description: "Excelente trabalho. Sua evolução foi registrada." });
   }, []);
 
-  const selectedSplit = plan.splits[selectedSplitIndex];
-  const today = diasDaSemana[todayIndex];
-  const isRestDay = todaySplitIndex === null;
+  useEffect(() => {
+    if (allSetsCompleted && !celebratedRef.current) {
+      celebratedRef.current = true;
+      celebrate();
+    }
+    if (!allSetsCompleted) celebratedRef.current = false;
+  }, [allSetsCompleted, celebrate]);
 
-  const totalExercises = selectedSplit?.exercises.length ?? 0;
-  const completedCount = selectedSplit?.exercises.filter((e) => completedMap[e.id]).length ?? 0;
-  const progressPct = totalExercises > 0 ? (completedCount / totalExercises) * 100 : 0;
+  function selectSplit(index: number) {
+    const nextSplit = plan.splits[index];
+    setSelectedSplitIndex(index);
+    setExpandedExerciseId(nextSplit?.exercises[0]?.id ?? null);
+  }
+
+  function handleRegistered(exerciseIndex: number) {
+    const nextExercise = selectedSplit?.exercises[exerciseIndex + 1];
+    setExpandedExerciseId(nextExercise?.id ?? null);
+  }
 
   return (
     <div className="space-y-4">
-      <section className="-mx-4 -mt-5 bg-[#0d2342] px-5 py-6 text-white">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-bold text-slate-300">{selectedSplit?.splitName ?? plan.planName}</p>
-            <h1 className="mt-1 text-2xl font-black">{plan.planName}</h1>
+      <section className="relative -mx-4 -mt-5 overflow-hidden bg-apex-navy px-5 pb-7 pt-10 text-white">
+        <span className="absolute -right-12 -top-10 h-44 w-44 rounded-full bg-blue-500/10" aria-hidden="true" />
+        <span className="absolute right-10 -top-7 h-28 w-28 rounded-full bg-blue-500/20" aria-hidden="true" />
+        <div className="relative flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-sm font-medium capitalize text-slate-400">{todayLabel ?? diasDaSemana[todayIndex]?.nome}</p>
+            <h1 className="mt-2 truncate text-3xl font-black tracking-tight">{selectedName.title}</h1>
+            <p className="mt-1 truncate text-base text-slate-300">{selectedName.description || (plan.planName !== selectedName.title ? plan.planName : `Treino com ${plan.trainerName}`)}</p>
           </div>
-          <p className="text-sm font-bold">{completedCount}/{totalExercises} concluídos</p>
+          {streak !== undefined && <span className="flex h-11 flex-none items-center gap-1 rounded-xl bg-apex-orange/15 px-3 text-sm font-black text-orange-400"><Flame className="h-5 w-5 fill-current" aria-hidden="true" />{streak}</span>}
         </div>
-        <div className="mt-5 h-2 overflow-hidden rounded-full bg-white/25"><div className="h-full rounded-full bg-white transition-all" style={{ width: `${progressPct}%` }} /></div>
-        <div className="mt-4 flex gap-5 text-sm font-medium text-slate-300"><span>◷ ~45 min</span><span>🏋 {totalExercises} exercícios</span></div>
+        <div className="relative mt-6 flex items-center justify-between text-sm text-slate-400"><span>{completedSets} de {totalSets} séries</span><strong className="text-slate-200">{progress}%</strong></div>
+        <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-apex-blue transition-[width] duration-normal ease-app" style={{ width: `${progress}%` }} /></div>
       </section>
 
-      {/* Abas com dias da semana */}
-      <div className="flex flex-wrap gap-2">
-        {plan.splits.map((split, index) => {
-          const dias = diasDoSplit(plan.trainingDays, index, plan.splits.length);
-          const isSelected = selectedSplitIndex === index;
-          const isToday = index === todaySplitIndex;
-
-          return (
-            <button
-              key={split.id}
-              type="button"
-              onClick={() => setSelectedSplitIndex(index)}
-              className={cn(
-                "flex flex-col items-center rounded-2xl px-4 py-2 text-xs font-bold transition-all",
-                isSelected
-                  ? "bg-[#0d2342] text-white shadow-sm"
-                  : "border border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
-              )}
-            >
-              {/* Dias da semana */}
-              <span className={cn("text-[10px] font-semibold", isSelected ? "text-blue-100" : "text-slate-400")}>
-                {dias.length > 0 ? dias.join(" / ") : split.splitName}
-              </span>
-              {/* Nome do split */}
-              <span className="text-sm font-black">{split.splitName}</span>
-              {/* Indicador de hoje */}
-              {isToday && (
-                <span className={cn(
-                  "mt-0.5 h-1 w-1 rounded-full",
-                  isSelected ? "bg-white" : "bg-blue-500"
-                )} />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Exercícios */}
-      {!selectedSplit || selectedSplit.exercises.length === 0 ? (
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-slate-700">
-            {isRestDay && selectedSplitIndex === (todaySplitIndex ?? -1)
-              ? "Hoje é dia de descanso. Aproveite para recuperar!"
-              : "Nenhum exercício cadastrado nesta divisão."}
-          </p>
+      {plan.splits.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Divisões de treino">
+          {plan.splits.map((split, index) => {
+            const isSelected = selectedSplitIndex === index;
+            const isToday = index === todaySplitIndex;
+            const days = diasDoSplit(plan.trainingDays, index, plan.splits.length);
+            return (
+              <button key={split.id} type="button" onClick={() => selectSplit(index)} aria-pressed={isSelected} className={cn("tap-feedback focus-app flex min-h-12 flex-none items-center gap-2 rounded-control border px-4 text-sm font-bold", isSelected ? "border-apex-navy bg-apex-navy text-white" : "border-border bg-white text-apex-muted")}>
+                <span>{split.splitName}</span>
+                <span className={cn("text-[10px]", isSelected ? "text-slate-300" : "text-slate-400")}>{days.join("/")}{isToday ? " · hoje" : ""}</span>
+              </button>
+            );
+          })}
         </div>
+      )}
+
+      {!selectedSplit || selectedSplit.exercises.length === 0 ? (
+        <div className="app-card p-5"><p className="text-sm font-semibold text-apex-muted">{isRestDay ? "Hoje é dia de descanso. Aproveite para recuperar!" : "Nenhum exercício cadastrado nesta divisão."}</p></div>
       ) : (
         <div className="space-y-3">
-          {selectedSplit.exercises.map((exercise) => (
+          {selectedSplit.exercises.map((exercise, exerciseIndex) => (
             <ExerciseExecutionCard
               key={exercise.id}
+              index={exerciseIndex + 1}
               exercise={exercise}
               lastLoad={exercise.lastLoad}
               videoUrl={exercise.videoUrl}
-              onCompletedChange={(completed) => handleCompletedChange(exercise.id, completed)}
+              expanded={expandedExerciseId === exercise.id}
+              persist={persist}
+              onToggleExpanded={() => setExpandedExerciseId((current) => current === exercise.id ? null : exercise.id)}
+              onCompletedSetsChange={(count) => setCompletedSetsMap((current) => ({ ...current, [exercise.id]: count }))}
+              onRegistered={() => handleRegistered(exerciseIndex)}
             />
           ))}
         </div>
       )}
 
-      {totalExercises > 0 && completedCount === totalExercises && (
-        <div className="rounded-[22px] bg-green-500 p-4 shadow-md shadow-green-500/20">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-sm font-bold text-white">Progresso do Treino</span>
-            <span className="text-sm font-bold text-white">{completedCount}/{totalExercises}</span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-green-400/50">
-            <div
-              className="h-full rounded-full bg-white transition-all duration-300"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </div>
+      {totalSets > 0 && (
+        <Button type="button" disabled={!allSetsCompleted} className={cn("h-16 w-full text-base", allSetsCompleted ? "bg-apex-green hover:bg-green-600" : "bg-slate-400 shadow-none")} onClick={celebrate}>
+          {allSetsCompleted && <CheckCircle2 className="mr-2 h-5 w-5" aria-hidden="true" />}
+          Concluir treino ({completedSets}/{totalSets})
+        </Button>
       )}
     </div>
   );

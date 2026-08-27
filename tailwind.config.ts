@@ -50,6 +50,17 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))"
         },
+        apex: {
+          background: "hsl(var(--apex-background) / <alpha-value>)",
+          surface: "hsl(var(--apex-surface) / <alpha-value>)",
+          soft: "hsl(var(--apex-surface-soft) / <alpha-value>)",
+          navy: "hsl(var(--apex-navy) / <alpha-value>)",
+          blue: "hsl(var(--apex-blue) / <alpha-value>)",
+          green: "hsl(var(--apex-green) / <alpha-value>)",
+          orange: "hsl(var(--apex-orange) / <alpha-value>)",
+          ink: "hsl(var(--apex-ink) / <alpha-value>)",
+          muted: "hsl(var(--apex-muted) / <alpha-value>)"
+        },
         neon: {
           green: "#002B5E",
           blue: "#1E40AF",
@@ -62,11 +73,23 @@ const config: Config = {
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)"
+        sm: "calc(var(--radius) - 4px)",
+        card: "var(--radius-card)",
+        control: "var(--radius-control)"
       },
       boxShadow: {
-        neon: "0 4px 14px rgba(0, 43, 94, 0.14)",
-        blue: "0 4px 14px rgba(30, 64, 175, 0.12)"
+        card: "var(--shadow-card)",
+        floating: "var(--shadow-floating)",
+        action: "var(--shadow-action)",
+        neon: "var(--shadow-action)",
+        blue: "var(--shadow-action)"
+      },
+      transitionTimingFunction: {
+        app: "var(--ease-app)"
+      },
+      transitionDuration: {
+        fast: "var(--duration-fast)",
+        normal: "var(--duration-normal)"
       }
     }
   },

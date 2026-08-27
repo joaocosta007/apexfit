@@ -6,3 +6,5 @@ node_modules
 .env
 .env.*
 !.env.example
+artifacts
+src/app/design-preview

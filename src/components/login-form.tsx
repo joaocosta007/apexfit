@@ -1,16 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, LockKeyhole, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 export function LoginForm({ initialError }: { initialError?: string }) {
   const router = useRouter();
   const [erro, setErro] = useState(initialError ?? "");
   const [showPassword, setShowPassword] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (initialError) toast.error(initialError);
+  }, [initialError]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,7 +28,9 @@ export function LoginForm({ initialError }: { initialError?: string }) {
     startTransition(async () => {
       const result = await signIn("credentials", { email, password, redirect: false });
       if (result?.error) {
-        setErro("E-mail ou senha inválidos. Tente novamente.");
+        const message = "E-mail ou senha inválidos. Tente novamente.";
+        setErro(message);
+        toast.error(message);
         return;
       }
       router.push("/");
@@ -67,11 +74,7 @@ export function LoginForm({ initialError }: { initialError?: string }) {
         </div>
       </div>
 
-      {erro && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
-          {erro}
-        </div>
-      )}
+      {erro && <p className="sr-only" role="alert">{erro}</p>}
 
       <div className="pt-1">
         <button

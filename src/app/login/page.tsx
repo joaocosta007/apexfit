@@ -3,6 +3,16 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/login-form";
 import { authOptions, roleHomePath } from "@/lib/auth";
 import { BrandMark } from "@/components/brand-mark";
+import { PhaseOneDemo } from "@/app/design-preview/phase-one-demo";
+import { StudentNavDemo } from "@/app/design-preview/student-nav-demo";
+import { WorkoutExecutionDemo } from "@/app/design-preview/workout-execution-demo";
+import { StudentProgressDemo } from "@/app/design-preview/student-progress-demo";
+import { StudentProfileDemo } from "@/app/design-preview/student-profile-demo";
+import { StudentAssessmentsDemo } from "@/app/design-preview/student-assessments-demo";
+import { TrainerDashboardDemo } from "@/app/design-preview/trainer-dashboard-demo";
+import { TrainerWorkoutDemo } from "@/app/design-preview/trainer-workout-demo";
+import { ManagerDashboardDemo } from "@/app/design-preview/manager-dashboard-demo";
+import { RouteSkeleton } from "@/components/route-skeleton";
 
 export default async function LoginPage({
   searchParams
@@ -13,12 +23,65 @@ export default async function LoginPage({
     cadastro?: string;
     verificado?: string;
     senha?: string;
+    preview?: string;
   }>;
 }) {
+  const params = await searchParams;
+
+  if (params?.preview === "design-system" && process.env.VERCEL_ENV !== "production") {
+    return <PhaseOneDemo />;
+  }
+
+  if (params?.preview === "student-navigation" && process.env.VERCEL_ENV !== "production") {
+    return <StudentNavDemo />;
+  }
+
+  if (params?.preview === "workout-execution" && process.env.VERCEL_ENV !== "production") {
+    return <WorkoutExecutionDemo />;
+  }
+
+  if (params?.preview === "student-progress" && process.env.VERCEL_ENV !== "production") {
+    return <StudentProgressDemo />;
+  }
+
+  if (params?.preview === "student-progress-empty" && process.env.VERCEL_ENV !== "production") {
+    return <StudentProgressDemo empty />;
+  }
+
+  if (params?.preview === "student-profile" && process.env.VERCEL_ENV !== "production") {
+    return <StudentProfileDemo />;
+  }
+
+  if (params?.preview === "student-assessments" && process.env.VERCEL_ENV !== "production") {
+    return <StudentAssessmentsDemo />;
+  }
+
+  if (params?.preview === "student-assessments-empty" && process.env.VERCEL_ENV !== "production") {
+    return <StudentAssessmentsDemo empty />;
+  }
+
+  if (params?.preview === "trainer-dashboard" && process.env.VERCEL_ENV !== "production") {
+    return <TrainerDashboardDemo />;
+  }
+
+  if (params?.preview === "trainer-workout" && process.env.VERCEL_ENV !== "production") {
+    return <TrainerWorkoutDemo />;
+  }
+
+  if (params?.preview === "manager-dashboard" && process.env.VERCEL_ENV !== "production") {
+    return <ManagerDashboardDemo />;
+  }
+
+  if (params?.preview === "student-loading" && process.env.VERCEL_ENV !== "production") {
+    return <RouteSkeleton variant="student" />;
+  }
+
+  if (params?.preview === "dashboard-loading" && process.env.VERCEL_ENV !== "production") {
+    return <RouteSkeleton />;
+  }
+
   const session = await getServerSession(authOptions);
   if (session?.user?.role) redirect(roleHomePath[session.user.role]);
-
-  const params = await searchParams;
 
   const initialError =
     params?.erro === "acesso-negado"

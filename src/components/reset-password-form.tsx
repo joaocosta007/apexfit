@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { redefinirSenhaAction } from "@/app/actions";
+import { toast } from "sonner";
 
 export function ResetPasswordForm({ token }: { token: string }) {
   const [error, setError] = useState("");
@@ -16,7 +17,9 @@ export function ResetPasswordForm({ token }: { token: string }) {
     const confirm = formData.get("confirm") as string;
 
     if (password !== confirm) {
-      setError("As senhas não coincidem.");
+      const message = "As senhas não coincidem.";
+      setError(message);
+      toast.error(message);
       return;
     }
 
@@ -25,8 +28,12 @@ export function ResetPasswordForm({ token }: { token: string }) {
     try {
       await redefinirSenhaAction(token, formData);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erro inesperado.";
-      if (!msg.includes("NEXT_REDIRECT")) setError(msg);
+      const msg = err instanceof Error ? err.message : "";
+      if (!msg.includes("NEXT_REDIRECT")) {
+        const friendlyMessage = msg.includes("inválido ou expirado") ? "Este link expirou. Solicite um novo link de recuperação." : "Não foi possível salvar a nova senha. Tente novamente.";
+        setError(friendlyMessage);
+        toast.error("Não foi possível alterar a senha", { description: friendlyMessage });
+      }
     } finally {
       setLoading(false);
     }
@@ -34,11 +41,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
   return (
     <form action={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          {error}
-        </div>
-      )}
+      {error && <p className="sr-only" role="alert">{error}</p>}
 
       <div className="space-y-2">
         <Label htmlFor="password">Nova senha</Label>
