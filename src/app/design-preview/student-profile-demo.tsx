@@ -16,7 +16,7 @@ const weekDays: ProfileWeekDay[] = [
 export function StudentProfileDemo() {
   return (
     <main className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-apex-background">
-      <div className="flex-1 overflow-y-auto px-4 pb-6 pt-5">
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5">
         <StudentProfileView name="Rafael Mendes" memberSince="Março de 2026" totalWorkouts={87} streak={12} weeks={22} weekDays={weekDays} exportData={{ preview: true }} />
       </div>
       <StudentBottomNav active="profile" onNavigate={() => undefined} />

@@ -26,7 +26,7 @@ export function StudentNavDemo() {
         <p className="relative mt-1 text-sm text-slate-300">Peito e Tríceps</p>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-5 pb-6 pt-5">
+      <div className="flex-1 overflow-y-auto px-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5">
 
         <section className="mt-7 grid grid-cols-2 gap-3" aria-label="Resumo do aluno">
           <article className="app-card p-5">

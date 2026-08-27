@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import confetti from "canvas-confetti";
 import { CheckCircle2, Flame } from "lucide-react";
 import { toast } from "sonner";
@@ -32,6 +32,7 @@ type StudentWeeklyWorkoutProps = {
   todayLabel?: string;
   streak?: number;
   persist?: boolean;
+  notice?: ReactNode;
 };
 
 function diasDoSplit(trainingDays: unknown, splitIndex: number, splitCount: number): string[] {
@@ -45,7 +46,7 @@ function displaySplitName(splitName: string) {
 }
 
 /** Experiência completa de treino do aluno, com progresso por série e celebração final. */
-export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, persist = true }: StudentWeeklyWorkoutProps) {
+export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, persist = true, notice }: StudentWeeklyWorkoutProps) {
   const todaySplitIndex = selecionarIndiceSplitPorDia(plan.trainingDays, plan.splits.length, todayIndex);
   const [selectedSplitIndex, setSelectedSplitIndex] = useState(todaySplitIndex ?? 0);
   const selectedSplit = plan.splits[selectedSplitIndex];
@@ -88,7 +89,7 @@ export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, per
 
   return (
     <div className="space-y-4">
-      <section className="relative -mx-4 -mt-5 overflow-hidden bg-apex-navy px-5 pb-7 pt-10 text-white">
+      <section className="sticky top-0 z-20 -mx-4 -mt-5 overflow-hidden bg-apex-navy px-5 pb-7 pt-10 text-white shadow-[0_8px_20px_rgba(13,35,66,0.18)]">
         <span className="absolute -right-12 -top-10 h-44 w-44 rounded-full bg-blue-500/10" aria-hidden="true" />
         <span className="absolute right-10 -top-7 h-28 w-28 rounded-full bg-blue-500/20" aria-hidden="true" />
         <div className="relative flex items-start justify-between gap-4">
@@ -102,6 +103,8 @@ export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, per
         <div className="relative mt-6 flex items-center justify-between text-sm text-slate-400"><span>{completedSets} de {totalSets} séries</span><strong className="text-slate-200">{progress}%</strong></div>
         <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-apex-blue transition-[width] duration-normal ease-app" style={{ width: `${progress}%` }} /></div>
       </section>
+
+      {notice && <div className="mt-6">{notice}</div>}
 
       {plan.splits.length > 1 && (
         <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Divisões de treino">

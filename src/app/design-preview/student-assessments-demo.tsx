@@ -12,7 +12,7 @@ const previewAssessments: StudentAssessmentData[] = [
 export function StudentAssessmentsDemo({ empty = false }: { empty?: boolean }) {
   return (
     <main className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-apex-background">
-      <div className="flex-1 overflow-y-auto px-4 pb-6 pt-5">
+      <div className="flex-1 overflow-y-auto px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5">
         <header className="relative -mx-4 -mt-5 mb-5 overflow-hidden bg-apex-navy px-5 pb-8 pt-10 text-white">
           <span className="absolute -right-12 -top-14 h-44 w-44 rounded-full bg-white/[0.04]" /><span className="absolute right-10 -top-9 h-28 w-28 rounded-full bg-apex-blue/10" />
           <p className="relative text-sm font-semibold tracking-wide text-slate-400">{empty ? "Aguardando primeira avaliação" : "Última avaliação: 12 ago. 2026"}</p><h1 className="relative mt-2 text-2xl font-black">Avaliações</h1>

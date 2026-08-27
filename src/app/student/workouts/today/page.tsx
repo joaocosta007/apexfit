@@ -110,8 +110,6 @@ export default async function StudentWorkoutTodayPage() {
 
   return (
     <AppShell title="Treino de Hoje" variant="student" userName={session.user.name} showPageHeader={false} hideStudentTopBar bottomNav={<StudentBottomNav active="workout" />}>
-      {!emailVerified && <EmailVerificationBanner />}
-
       {!plan ? (
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="font-semibold text-slate-900">Nenhum plano ativo encontrado.</p>
@@ -119,7 +117,7 @@ export default async function StudentWorkoutTodayPage() {
         </div>
       ) : null}
 
-      {serializedPlan ? <StudentWeeklyWorkout plan={serializedPlan} todayIndex={todayIndex} todayLabel={todayLabel} streak={streak} /> : null}
+      {serializedPlan ? <StudentWeeklyWorkout plan={serializedPlan} todayIndex={todayIndex} todayLabel={todayLabel} streak={streak} notice={!emailVerified ? <EmailVerificationBanner /> : null} /> : null}
 
       <PushSubscriber />
     </AppShell>

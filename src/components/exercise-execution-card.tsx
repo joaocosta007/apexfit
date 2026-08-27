@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, CheckCircle2, Minus, Pause, Play, Plus, X } from "lucide-react";
+import { Check, CheckCircle2, Minus, Pause, Play, Plus, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { registrarTreinoAction } from "@/app/actions";
 import { Button } from "@/components/ui/button";
@@ -150,12 +150,26 @@ export function ExerciseExecutionCard({ index, exercise, lastLoad, videoUrl, exp
                   </DrawerHeader>
                   <div className="px-6 pb-6">
                     <div className="soft-surface flex items-center justify-between p-4">
-                      <Button type="button" variant="outline" size="icon" aria-label="Diminuir carga" onClick={() => setDraftLoad((value) => Math.max(0, value - 0.5))}><Minus className="h-5 w-5" aria-hidden="true" /></Button>
+                      <Button type="button" variant="outline" size="icon" aria-label="Diminuir carga" onClick={() => setDraftLoad((value) => Math.max(0, Number((value - 0.5).toFixed(1))))}><Minus className="h-5 w-5" aria-hidden="true" /></Button>
                       <div className="text-center">
                         <strong className="block text-4xl font-black tracking-tight text-apex-ink">{draftLoad.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}</strong>
                         <span className="text-sm font-semibold text-apex-muted">quilogramas</span>
                       </div>
-                      <Button type="button" variant="outline" size="icon" aria-label="Aumentar carga" onClick={() => setDraftLoad((value) => value + 0.5)}><Plus className="h-5 w-5" aria-hidden="true" /></Button>
+                      <Button type="button" variant="outline" size="icon" aria-label="Aumentar carga" onClick={() => setDraftLoad((value) => Number((value + 0.5).toFixed(1)))}><Plus className="h-5 w-5" aria-hidden="true" /></Button>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-3" aria-label="Ajustes rápidos de carga">
+                      {[1, 5, 10].map((increment) => (
+                        <button
+                          key={increment}
+                          type="button"
+                          onClick={() => setDraftLoad((value) => Number((value + increment).toFixed(1)))}
+                          className="tap-feedback focus-app mx-auto flex h-16 w-16 flex-col items-center justify-center rounded-full border border-blue-100 bg-blue-50 text-apex-blue hover:bg-blue-100"
+                          aria-label={`Adicionar ${increment} quilogramas`}
+                        >
+                          <strong className="text-base leading-none">+{increment}</strong>
+                          <span className="mt-1 text-[10px] font-bold">kg</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <DrawerFooter>
@@ -189,6 +203,9 @@ export function ExerciseExecutionCard({ index, exercise, lastLoad, videoUrl, exp
             </div>
             <button type="button" onClick={() => { if (timerSeconds === 0) setTimerSeconds(restSeconds); setTimerRunning((running) => !running); }} className="tap-feedback focus-app flex min-h-11 min-w-16 items-center justify-center rounded-xl bg-apex-navy px-3 text-xs font-bold text-white" aria-label={timerRunning ? "Pausar descanso" : "Iniciar descanso"}>
               {timerRunning ? <Pause className="h-4 w-4" aria-hidden="true" /> : "Iniciar"}
+            </button>
+            <button type="button" onClick={() => { setTimerRunning(false); setTimerSeconds(restSeconds); }} className="tap-feedback focus-app flex h-11 w-11 flex-none items-center justify-center rounded-xl border border-slate-200 bg-white text-apex-muted hover:bg-apex-soft hover:text-apex-navy" aria-label="Resetar tempo de descanso">
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
 
