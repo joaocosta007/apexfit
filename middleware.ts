@@ -31,7 +31,7 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => Boolean(token)
+      authorized: ({ token, req }) => req.nextUrl.pathname === "/offline" || Boolean(token)
     },
     pages: {
       signIn: "/login"
