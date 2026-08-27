@@ -19,9 +19,8 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# materiais locais de auditoria e protótipos de design
+# materiais locais de auditoria
 artifacts/
-src/app/design-preview/
 
 # sistema/editor
 .DS_Store
