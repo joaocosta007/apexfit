@@ -1,6 +1,8 @@
 import { Role } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
 import { EmailVerificationBanner } from "@/components/email-verification-banner";
+import { OfflineStatus } from "@/components/offline-status";
+import { OfflineWorkoutBootstrap } from "@/components/offline-workout-bootstrap";
 import { PushSubscriber } from "@/components/push-subscriber";
 import { StudentBottomNav } from "@/components/student-bottom-nav";
 import { StudentWeeklyWorkout } from "@/components/student-weekly-workout";
@@ -9,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { diasDaSemana } from "@/lib/utils";
 import { findExerciseByCatalogId, findExerciseByName } from "@/lib/exercise-catalog";
+import type { OfflineWorkoutPlan } from "@/lib/offline-types";
 
 function calculateStreak(dates: Date[]) {
   const uniqueDays = [...new Set(dates.map((date) => date.toISOString().slice(0, 10)))].sort().reverse();
@@ -78,11 +81,13 @@ export default async function StudentWorkoutTodayPage() {
     return [6, 0, 1, 2, 3, 4, 5][jsIndex] ?? 0;
   })();
 
-  const serializedPlan = plan
+  const serializedPlan: OfflineWorkoutPlan | null = plan
     ? {
+        id: plan.id,
         planName: plan.planName,
         trainerName: plan.trainer.name,
         trainingDays: plan.trainingDays,
+        updatedAt: plan.updatedAt.toISOString(),
         splits: plan.splits.map((split) => ({
           id: split.id,
           splitName: split.splitName,
@@ -110,6 +115,8 @@ export default async function StudentWorkoutTodayPage() {
 
   return (
     <AppShell title="Treino de Hoje" variant="student" userName={session.user.name} showPageHeader={false} hideStudentTopBar bottomNav={<StudentBottomNav active="workout" />}>
+      <OfflineStatus />
+      <OfflineWorkoutBootstrap plan={serializedPlan} streak={streak} />
       {!plan ? (
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="font-semibold text-slate-900">Nenhum plano ativo encontrado.</p>

@@ -1,5 +1,5 @@
 // Service Worker — ApexFit PWA
-// Estratégia: network-first (o app precisa de internet para o banco de dados)
+// O plano do aluno fica no IndexedDB; este cache mantém a casca offline disponível.
 
 // ── Push Notifications ────────────────────────────────────────────────────
 
@@ -30,8 +30,8 @@ self.addEventListener("notificationclick", (event) => {
 
 // ── Cache / install ───────────────────────────────────────────────────────
 
-const CACHE = "apexfit-v1";
-const OFFLINE_URLS = ["/", "/login"];
+const CACHE = "apexfit-v2";
+const OFFLINE_URLS = ["/offline", "/", "/login", "/manifest.json", "/icon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -50,13 +50,32 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Ignora requests que não sejam GET e requisições de API/auth
+  // Ignora requests que não sejam GET e requisições de API/auth: dados privados
+  // devem sempre ser validados pelo servidor quando houver conexão.
   if (event.request.method !== "GET") return;
-  if (event.request.url.includes("/api/")) return;
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin || requestUrl.pathname.startsWith("/api/")) return;
+
+  const isStaticAsset = requestUrl.pathname.startsWith("/_next/static/") || requestUrl.pathname.startsWith("/icon") || requestUrl.pathname === "/manifest.json";
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(event.request).then((cached) => cached ?? fetch(event.request).then((response) => {
+        if (response.ok) {
+          const copy = response.clone();
+          void caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+        }
+        return response;
+      }))
+    );
+    return;
+  }
+
+  const isNavigation = event.request.mode === "navigate" || event.request.headers.get("accept")?.includes("text/html");
+  if (!isNavigation) return;
 
   event.respondWith(
     fetch(event.request)
       .catch(() => caches.match(event.request))
-      .then((response) => response ?? caches.match("/"))
+      .then((response) => response ?? Response.redirect(new URL("/offline", self.location.origin).toString(), 302))
   );
 });
