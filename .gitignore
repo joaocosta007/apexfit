@@ -11,6 +11,8 @@ coverage
 # ambiente
 .env
 .env*.local
+.env.homolog
+.env*.homolog
 !.env.example
 
 # logs
