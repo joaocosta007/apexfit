@@ -17,11 +17,9 @@ export default async function CadastroPage({ params, searchParams }: CadastroPag
   const sp = await searchParams;
 
   const erroMsg =
-    sp?.erro === "email-existente"
-      ? "Este e-mail já está cadastrado. Use outro e-mail ou recupere sua senha."
-      : sp?.erro === "link-invalido"
-        ? "Este link de convite é inválido ou já foi utilizado."
-        : "";
+    sp?.erro === "link-invalido"
+      ? "Este link de convite é inválido ou já foi utilizado."
+      : "";
 
   const invite = await prisma.inviteToken.findUnique({
     where: { token },
