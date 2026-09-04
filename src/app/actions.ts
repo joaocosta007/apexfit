@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { PlanType, Role } from "@prisma/client";
+import { PlanType, Prisma, Role } from "@prisma/client";
 import { CUSTOM_EXERCISE_VALUE, findExerciseByCatalogId } from "@/lib/exercise-catalog";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -429,8 +429,13 @@ export async function enviarLembreteAction(studentId: string, dias: number) {
   }
 }
 
-export async function gerarLinkCadastroAction() {
+export async function gerarLinkCadastroAction(formData: FormData) {
   const session = await requireRole(Role.TRAINER);
+
+  const email = campoTexto(formData, "email").trim().toLowerCase();
+  if (!email || !z.string().email().safeParse(email).success) {
+    throw new Error("Informe um e-mail válido para o convite.");
+  }
 
   const headersList = await headers();
   const host = headersList.get("host") ?? "localhost:3000";
@@ -440,7 +445,7 @@ export async function gerarLinkCadastroAction() {
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 dias
 
   const invite = await prisma.inviteToken.create({
-    data: { trainerId: session.user.id, expiresAt }
+    data: { trainerId: session.user.id, email, expiresAt }
   });
 
   revalidatePath("/trainer");
@@ -468,30 +473,55 @@ export async function registrarAlunoComConviteAction(token: string, formData: Fo
 
   const parsed = studentSchema.parse({
     name: campoTexto(formData, "name"),
-    email: campoTexto(formData, "email").toLowerCase(),
+    email: campoTexto(formData, "email").trim().toLowerCase(),
     password: campoTexto(formData, "password")
   });
 
-  const existing = await prisma.user.findUnique({ where: { email: parsed.email } });
-  if (existing) redirect(`/cadastro/${token}?erro=email-existente`);
-
-  const passwordHash = await bcrypt.hash(parsed.password, 10);
+  // Se o convite possui email vinculado, exige correspondência
+  if (invite.email && invite.email.trim().toLowerCase() !== parsed.email) {
+    redirect(`/cadastro/${token}?erro=link-invalido`);
+  }
 
   let newStudentId: string | null = null;
 
-  await prisma.$transaction(async (tx) => {
-    const student = await tx.user.create({
-      data: { name: parsed.name, email: parsed.email, passwordHash, role: Role.STUDENT }
-    });
-    newStudentId = student.id;
-    await tx.studentTrainer.create({
-      data: { studentId: student.id, trainerId: invite.trainer.id }
-    });
-    await tx.inviteToken.update({
-      where: { id: invite.id },
-      data: { used: true }
-    });
-  });
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        // Consumo atômico: compare-and-set no campo used
+        const claim = await tx.inviteToken.updateMany({
+          where: { id: invite.id, used: false },
+          data: { used: true }
+        });
+
+        if (claim.count !== 1) {
+          throw new Error("CONVITE_CONSUMIDO");
+        }
+
+        const passwordHash = await bcrypt.hash(parsed.password, 10);
+
+        const student = await tx.user.create({
+          data: { name: parsed.name, email: parsed.email, passwordHash, role: Role.STUDENT }
+        });
+        newStudentId = student.id;
+
+        await tx.studentTrainer.create({
+          data: { studentId: student.id, trainerId: invite.trainer.id }
+        });
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+    );
+  } catch (err: unknown) {
+    // Rejeita violação de unicidade de e-mail (P2002), deadlock (P2034)
+    // e erros de convite — todos com mesma resposta pública genérica
+    if (
+      (err as { code?: string }).code === "P2002" ||
+      (err as { code?: string }).code === "P2034" ||
+      (err as { message?: string }).message === "CONVITE_CONSUMIDO"
+    ) {
+      redirect(`/cadastro/${token}?erro=link-invalido`);
+    }
+    throw err;
+  }
 
   if (newStudentId) {
     try {

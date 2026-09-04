@@ -105,7 +105,13 @@ function InviteDrawer({ inviteUrl, preview }: { inviteUrl: string | null; previe
           {inviteUrl ? <div className="rounded-2xl border border-green-200 bg-green-50 p-4"><p className="text-sm font-extrabold text-green-700">Link pronto para compartilhar</p><p className="mt-2 truncate rounded-xl border border-green-200 bg-white px-3 py-2 font-mono text-xs text-apex-muted">{inviteUrl}</p><div className="mt-3"><CopyButton text={inviteUrl} /></div></div> : <div className="rounded-2xl bg-apex-soft p-4 text-sm font-medium leading-relaxed text-apex-muted">O link conecta automaticamente o aluno ao seu perfil de professor.</div>}
         </div>
         <DrawerFooter>
-          <form action={preview ? undefined : gerarLinkCadastroAction} onSubmit={(event) => { if (preview) event.preventDefault(); }}><Button type="submit" className="w-full"><Link2 className="mr-2 h-4 w-4" />{inviteUrl ? "Gerar outro link" : "Gerar link de convite"}</Button></form>
+          <form action={preview ? undefined : gerarLinkCadastroAction} onSubmit={(event) => { if (preview) event.preventDefault(); }}>
+            <div className="px-1 pb-3">
+              <label htmlFor="invite-email" className="mb-1 block text-xs font-bold text-slate-500">E-mail do aluno</label>
+              <input id="invite-email" name="email" type="email" required placeholder="aluno@email.com" className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-apex-navy outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100" />
+            </div>
+            <Button type="submit" className="w-full"><Link2 className="mr-2 h-4 w-4" />{inviteUrl ? "Gerar outro link" : "Gerar link de convite"}</Button>
+          </form>
           <DrawerClose asChild><Button variant="ghost">Fechar</Button></DrawerClose>
         </DrawerFooter>
       </DrawerContent>
