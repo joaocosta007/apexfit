@@ -21,6 +21,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?erro=token-expirado", request.url));
   }
 
+  const user = await prisma.user.findUnique({
+    where: { id: record.userId },
+    select: { isActive: true }
+  });
+
+  if (!user || !user.isActive) {
+    return NextResponse.redirect(new URL("/login?erro=token-invalido", request.url));
+  }
+
   // Marca e-mail como verificado e remove o token
   await prisma.$transaction([
     prisma.user.update({
