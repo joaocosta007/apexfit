@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import type { Role } from "@prisma/client";
 import { authOptions, roleHomePath } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function requireRole(roles: Role | Role[]) {
   const allowedRoles = Array.isArray(roles) ? roles : [roles];
@@ -13,6 +14,15 @@ export async function requireRole(roles: Role | Role[]) {
 
   if (!allowedRoles.includes(session.user.role)) {
     redirect(roleHomePath[session.user.role]);
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isActive: true }
+  });
+
+  if (!user || !user.isActive) {
+    redirect("/login");
   }
 
   return session;
