@@ -1,11 +1,10 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import { requireActiveSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const session = await requireActiveSession();
+  if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
@@ -32,8 +31,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const session = await requireActiveSession();
+  if (!session) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 

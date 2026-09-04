@@ -123,27 +123,19 @@ export async function adicionarAlunoAction(formData: FormData) {
     throw new Error("Este e-mail já pertence a um gerente ou professor.");
   }
 
-  const passwordHash = await bcrypt.hash(parsed.password, 10);
-  const student =
-    existingUser ??
-    (await prisma.user.create({
-      data: {
-        name: parsed.name,
-        email: parsed.email,
-        passwordHash,
-        role: Role.STUDENT
-      }
-    }));
-
   if (existingUser) {
-    await prisma.user.update({
-      where: { id: existingUser.id },
-      data: {
-        name: parsed.name,
-        passwordHash
-      }
-    });
+    throw new Error("Este e-mail já está cadastrado. Não é possível sobrescrever conta existente.");
   }
+
+  const passwordHash = await bcrypt.hash(parsed.password, 10);
+  const student = await prisma.user.create({
+    data: {
+      name: parsed.name,
+      email: parsed.email,
+      passwordHash,
+      role: Role.STUDENT
+    }
+  });
 
   await prisma.studentTrainer.createMany({
     data: [{ studentId: student.id, trainerId: session.user.id }],
@@ -171,27 +163,20 @@ export async function adicionarProfessorAction(formData: FormData) {
     throw new Error("Este e-mail já pertence a um gerente ou aluno.");
   }
 
+  if (existingUser) {
+    throw new Error("Este e-mail já está cadastrado. Não é possível sobrescrever conta existente.");
+  }
+
   const passwordHash = await bcrypt.hash(parsed.password, 10);
 
-  if (existingUser) {
-    await prisma.user.update({
-      where: { id: existingUser.id },
-      data: {
-        name: parsed.name,
-        passwordHash,
-        role: Role.TRAINER
-      }
-    });
-  } else {
-    await prisma.user.create({
-      data: {
-        name: parsed.name,
-        email: parsed.email,
-        passwordHash,
-        role: Role.TRAINER
-      }
-    });
-  }
+  await prisma.user.create({
+    data: {
+      name: parsed.name,
+      email: parsed.email,
+      passwordHash,
+      role: Role.TRAINER
+    }
+  });
 
   revalidatePath("/manager");
   redirect("/manager");
@@ -472,6 +457,15 @@ export async function registrarAlunoComConviteAction(token: string, formData: Fo
     redirect(`/cadastro/${token}?erro=link-invalido`);
   }
 
+  const trainer = await prisma.user.findUnique({
+    where: { id: invite.trainerId },
+    select: { isActive: true }
+  });
+
+  if (!trainer || !trainer.isActive) {
+    redirect(`/cadastro/${token}?erro=link-invalido`);
+  }
+
   const parsed = studentSchema.parse({
     name: campoTexto(formData, "name"),
     email: campoTexto(formData, "email").toLowerCase(),
@@ -628,7 +622,7 @@ export async function solicitarRecuperacaoSenhaAction(formData: FormData) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   // Não revela se o e-mail existe ou não (segurança)
-  if (user) {
+  if (user && user.isActive) {
     await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
 
     const record = await prisma.passwordResetToken.create({
@@ -657,6 +651,15 @@ export async function redefinirSenhaAction(token: string, formData: FormData) {
   const record = await prisma.passwordResetToken.findUnique({ where: { token } });
 
   if (!record || record.expiresAt < new Date()) {
+    throw new Error("Link de recuperação inválido ou expirado.");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: record.userId },
+    select: { isActive: true }
+  });
+
+  if (!user || !user.isActive) {
     throw new Error("Link de recuperação inválido ou expirado.");
   }
 

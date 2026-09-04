@@ -25,9 +25,10 @@ export default async function TrainerMonitoringPage({ params }: TrainerMonitorin
   await requireRole(Role.MANAGER);
 
   const trainer = await prisma.user.findFirst({
-    where: { id: trainerId, role: Role.TRAINER },
+    where: { id: trainerId, role: Role.TRAINER, isActive: true },
     include: {
       trainerStudents: {
+        where: { student: { isActive: true } },
         orderBy: { student: { name: "asc" } },
         include: {
           student: {

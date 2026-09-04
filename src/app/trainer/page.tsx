@@ -37,7 +37,7 @@ export default async function TrainerDashboardPage({ searchParams }: TrainerPage
   weekStart.setDate(weekStart.getDate() - (jsDay === 0 ? 6 : jsDay - 1));
 
   const relations = await prisma.studentTrainer.findMany({
-    where: { trainerId: session.user.id },
+    where: { trainerId: session.user.id, student: { isActive: true } },
     orderBy: { createdAt: "desc" },
     include: {
       student: {

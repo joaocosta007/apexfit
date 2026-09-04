@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BarChart3, Bell, ChevronRight, LogOut, Target, UserRound } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { toast } from "sonner";
+import { clearOfflineData } from "@/lib/offline-db";
 
 type StudentProfileActionsProps = {
   exportData: Record<string, unknown>;
@@ -53,13 +54,22 @@ export function StudentProfileActions({ exportData }: StudentProfileActionsProps
     toast.success("Arquivo de dados gerado.");
   }
 
+  async function handleLogout() {
+    try {
+      await clearOfflineData();
+    } catch {
+      console.warn("Não foi possível limpar os dados offline durante o logout.");
+    }
+    await signOut({ callbackUrl: "/login" });
+  }
+
   return (
     <section className="app-card overflow-hidden" aria-label="Configurações do perfil">
       <ActionLink href="/student/anamnese#dados-basicos" icon={UserRound} label="Dados pessoais" />
       <ActionLink href="/student/anamnese#objetivos" icon={Target} label="Metas e objetivos" />
       <ActionButton icon={Bell} label="Notificações" onClick={enableNotifications} />
       <ActionButton icon={BarChart3} label="Exportar dados" onClick={exportProfile} />
-      <ActionButton icon={LogOut} label="Sair da conta" onClick={() => signOut({ callbackUrl: "/login" })} danger />
+      <ActionButton icon={LogOut} label="Sair da conta" onClick={handleLogout} danger />
     </section>
   );
 }
