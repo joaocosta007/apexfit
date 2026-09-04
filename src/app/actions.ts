@@ -123,27 +123,19 @@ export async function adicionarAlunoAction(formData: FormData) {
     throw new Error("Este e-mail já pertence a um gerente ou professor.");
   }
 
-  const passwordHash = await bcrypt.hash(parsed.password, 10);
-  const student =
-    existingUser ??
-    (await prisma.user.create({
-      data: {
-        name: parsed.name,
-        email: parsed.email,
-        passwordHash,
-        role: Role.STUDENT
-      }
-    }));
-
   if (existingUser) {
-    await prisma.user.update({
-      where: { id: existingUser.id },
-      data: {
-        name: parsed.name,
-        passwordHash
-      }
-    });
+    throw new Error("Este e-mail já está cadastrado. Não é possível sobrescrever conta existente.");
   }
+
+  const passwordHash = await bcrypt.hash(parsed.password, 10);
+  const student = await prisma.user.create({
+    data: {
+      name: parsed.name,
+      email: parsed.email,
+      passwordHash,
+      role: Role.STUDENT
+    }
+  });
 
   await prisma.studentTrainer.createMany({
     data: [{ studentId: student.id, trainerId: session.user.id }],
@@ -171,27 +163,20 @@ export async function adicionarProfessorAction(formData: FormData) {
     throw new Error("Este e-mail já pertence a um gerente ou aluno.");
   }
 
+  if (existingUser) {
+    throw new Error("Este e-mail já está cadastrado. Não é possível sobrescrever conta existente.");
+  }
+
   const passwordHash = await bcrypt.hash(parsed.password, 10);
 
-  if (existingUser) {
-    await prisma.user.update({
-      where: { id: existingUser.id },
-      data: {
-        name: parsed.name,
-        passwordHash,
-        role: Role.TRAINER
-      }
-    });
-  } else {
-    await prisma.user.create({
-      data: {
-        name: parsed.name,
-        email: parsed.email,
-        passwordHash,
-        role: Role.TRAINER
-      }
-    });
-  }
+  await prisma.user.create({
+    data: {
+      name: parsed.name,
+      email: parsed.email,
+      passwordHash,
+      role: Role.TRAINER
+    }
+  });
 
   revalidatePath("/manager");
   redirect("/manager");
