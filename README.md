@@ -24,13 +24,9 @@ Abra `http://localhost:3000`.
 
 ## Usuários de demonstração
 
-Todas as senhas são `123456`.
-
-- Gerente: `gerente@apexfit.com`
-- Professor: `professor.bruno@apexfit.com`
-- Professora: `professora.larissa@apexfit.com`
-- Aluna: `aluna.ana@apexfit.com`
-- Aluno: `aluno.rafael@apexfit.com`
+Não há credenciais de demonstração neste repositório. Contas devem ser
+provisionadas por fluxo administrativo seguro ou por procedimento local
+documentado fora do repositório.
 
 ## Deploy na Vercel
 

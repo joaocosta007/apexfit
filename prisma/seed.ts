@@ -81,6 +81,27 @@ async function criarPlanoCompleto(params: {
 }
 
 async function main() {
+  const allowDemoSeed = process.env.ALLOW_DEMO_SEED;
+  const nodeEnv = process.env.NODE_ENV;
+  const appEnv = process.env.APP_ENV;
+
+  if (allowDemoSeed !== "true") {
+    console.error(
+      "Seed de demonstração bloqueado: é necessário definir ALLOW_DEMO_SEED=true em ambiente local explicitamente autorizado."
+    );
+    process.exit(1);
+  }
+
+  if (nodeEnv === "production") {
+    console.error("Seed de demonstração não pode ser executado em produção.");
+    process.exit(1);
+  }
+
+  if (appEnv === "homologation") {
+    console.error("Seed de demonstração não pode ser executado em homologação.");
+    process.exit(1);
+  }
+
   console.log("🌱 Iniciando seed do ApexFit...");
 
   const gerente = await criarUsuario("Camila Nogueira", "gerente@apexfit.com", Role.MANAGER);
