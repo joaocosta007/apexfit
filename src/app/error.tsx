@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
+import { clearOfflineData } from "@/lib/offline-db";
 import { toast } from "sonner";
 
 export default function AppError({
@@ -45,7 +46,14 @@ export default function AppError({
           <Button
             type="button"
             variant="outline"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={async () => {
+              try {
+                await clearOfflineData();
+              } catch {
+                console.warn("Não foi possível limpar os dados offline durante o logout.");
+              }
+              await signOut({ callbackUrl: "/login" });
+            }}
           >
             Sair e voltar ao login
           </Button>
