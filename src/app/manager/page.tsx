@@ -15,7 +15,7 @@ export default async function ManagerDashboardPage() {
 
   const [trainers, linkedStudents, activePlans, weeklyStudents] = await Promise.all([
     prisma.user.findMany({
-      where: { role: Role.TRAINER },
+      where: { role: Role.TRAINER, isActive: true },
       orderBy: { name: "asc" },
       include: {
         _count: {
