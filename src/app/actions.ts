@@ -457,6 +457,15 @@ export async function registrarAlunoComConviteAction(token: string, formData: Fo
     redirect(`/cadastro/${token}?erro=link-invalido`);
   }
 
+  const trainer = await prisma.user.findUnique({
+    where: { id: invite.trainerId },
+    select: { isActive: true }
+  });
+
+  if (!trainer || !trainer.isActive) {
+    redirect(`/cadastro/${token}?erro=link-invalido`);
+  }
+
   const parsed = studentSchema.parse({
     name: campoTexto(formData, "name"),
     email: campoTexto(formData, "email").toLowerCase(),
@@ -613,7 +622,7 @@ export async function solicitarRecuperacaoSenhaAction(formData: FormData) {
   const user = await prisma.user.findUnique({ where: { email } });
 
   // Não revela se o e-mail existe ou não (segurança)
-  if (user) {
+  if (user && user.isActive) {
     await prisma.passwordResetToken.deleteMany({ where: { userId: user.id } });
 
     const record = await prisma.passwordResetToken.create({
@@ -642,6 +651,15 @@ export async function redefinirSenhaAction(token: string, formData: FormData) {
   const record = await prisma.passwordResetToken.findUnique({ where: { token } });
 
   if (!record || record.expiresAt < new Date()) {
+    throw new Error("Link de recuperação inválido ou expirado.");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: record.userId },
+    select: { isActive: true }
+  });
+
+  if (!user || !user.isActive) {
     throw new Error("Link de recuperação inválido ou expirado.");
   }
 
