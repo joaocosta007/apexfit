@@ -47,7 +47,15 @@ export async function loadWorkoutSnapshot(): Promise<OfflineWorkoutSnapshot | nu
 }
 
 export async function clearOfflineData() {
-  if (typeof window === "undefined" || !window.indexedDB) return;
+  if (typeof window === "undefined") return;
+
+  // Limpa dados privados do Cache Storage via Service Worker
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: "CLEAR_PRIVATE_CACHE" });
+  }
+
+  // Limpa dados offline do IndexedDB
+  if (!window.indexedDB) return;
   const database = await openDatabase();
   await new Promise<void>((resolve, reject) => {
     const transaction = database.transaction(SNAPSHOT_STORE, "readwrite");
