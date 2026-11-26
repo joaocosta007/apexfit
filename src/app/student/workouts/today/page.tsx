@@ -4,7 +4,6 @@ import { EmailVerificationBanner } from "@/components/email-verification-banner"
 import { OfflineStatus } from "@/components/offline-status";
 import { OfflineWorkoutBootstrap } from "@/components/offline-workout-bootstrap";
 import { PushSubscriber } from "@/components/push-subscriber";
-import { StudentBottomNav } from "@/components/student-bottom-nav";
 import { StudentWeeklyWorkout } from "@/components/student-weekly-workout";
 import { Card, CardContent } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma";
@@ -114,7 +113,7 @@ export default async function StudentWorkoutTodayPage() {
     : null;
 
   return (
-    <AppShell title="Treino de Hoje" variant="student" userName={session.user.name} showPageHeader={false} hideStudentTopBar bottomNav={<StudentBottomNav active="workout" />}>
+    <AppShell title="Treino de Hoje" variant="student" userName={session.user.name} showPageHeader={false} hideStudentTopBar comBarraInferior>
       <OfflineStatus />
       <OfflineWorkoutBootstrap plan={serializedPlan} streak={streak} />
       {!plan ? (

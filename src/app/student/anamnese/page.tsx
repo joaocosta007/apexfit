@@ -3,7 +3,6 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { salvarAnamneseAction } from "@/app/actions";
 import { AppShell } from "@/components/app-shell";
-import { StudentBottomNav } from "@/components/student-bottom-nav";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -53,7 +52,7 @@ export default async function StudentAnamnesePage({
           </Link>
         </Button>
       }
-      bottomNav={<StudentBottomNav active="profile" />}
+      comBarraInferior
     >
       {salvo && (
         <div className="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">

@@ -198,16 +198,6 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .student-screen-slide-forward {
-    animation: student-screen-slide-forward 280ms var(--ease-app) both;
-    will-change: opacity, transform;
-  }
-
-  .student-screen-slide-backward {
-    animation: student-screen-slide-backward 280ms var(--ease-app) both;
-    will-change: opacity, transform;
-  }
-
   .login-sheet-enter {
     animation: login-sheet-enter 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
     will-change: opacity, transform;
@@ -345,27 +335,40 @@ html[data-abertura="on"] .abertura-overlay {
   to { transform: translateX(200%); }
 }
 
-@keyframes student-screen-slide-forward {
-  from {
-    opacity: 0.45;
-    transform: translateX(28px);
-  }
+/*
+ * Troca de aba do aluno (StudentPageTransition): o conteúdo novo entra com
+ * fade + deslize curto na direção da aba. O fundo azul do cabeçalho
+ * (.student-hero) não anima, só o texto dele, para não "piscar" claro entre
+ * telas que têm o mesmo cabeçalho.
+ */
+.tela-entrando {
+  --tela-deslize: 14px;
+}
 
-  to {
-    opacity: 1;
-    transform: translateX(0);
+.tela-entrando.tela-voltando {
+  --tela-deslize: -14px;
+}
+
+.tela-entrando > :not(.student-hero):not(:has(.student-hero)),
+.tela-entrando :has(> .student-hero) > :not(.student-hero) {
+  animation: tela-conteudo 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.tela-entrando .student-hero > * {
+  animation: tela-texto 280ms ease-out both;
+}
+
+@keyframes tela-conteudo {
+  from {
+    opacity: 0;
+    transform: translateX(var(--tela-deslize));
   }
 }
 
-@keyframes student-screen-slide-backward {
+@keyframes tela-texto {
   from {
-    opacity: 0.45;
-    transform: translateX(-28px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
+    opacity: 0;
+    transform: translateY(4px);
   }
 }
 
@@ -388,10 +391,13 @@ html[data-abertura="on"] .abertura-overlay {
     scroll-behavior: auto !important;
   }
 
-  .student-screen-slide-forward,
-  .student-screen-slide-backward,
   .login-sheet-enter {
     animation: none;
+  }
+
+  /* !important: os seletores da troca de tela são mais específicos. */
+  .tela-entrando * {
+    animation: none !important;
   }
 
   .glass-tabbar-lens {

@@ -1,7 +1,6 @@
 import { Role } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
 import { ProfileWeekDay, StudentProfileView } from "@/components/student-profile-view";
-import { StudentBottomNav } from "@/components/student-bottom-nav";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 import { diasDaSemana } from "@/lib/utils";
@@ -83,7 +82,7 @@ export default async function StudentDashboardPage() {
   };
 
   return (
-    <AppShell title="Perfil" variant="student" userName={name} showPageHeader={false} hideStudentTopBar bottomNav={<StudentBottomNav active="profile" />}>
+    <AppShell title="Perfil" variant="student" userName={name} showPageHeader={false} hideStudentTopBar comBarraInferior>
       <StudentProfileView name={name} memberSince={memberSince} totalWorkouts={uniqueWorkoutDays.size} streak={calculateStreak(logs.map((log) => log.date))} weeks={weeks} weekDays={weekDays} exportData={exportData} />
     </AppShell>
   );
