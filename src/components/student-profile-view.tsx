@@ -24,7 +24,7 @@ type StudentProfileViewProps = {
 export function StudentProfileView({ name, memberSince, totalWorkouts, streak, weeks, weekDays, exportData }: StudentProfileViewProps) {
   return (
     <>
-      <header className="relative -mx-4 -mt-5 overflow-hidden bg-apex-navy px-5 pb-9 pt-10 text-white">
+      <header className="student-hero -mx-4 -mt-5 overflow-hidden bg-apex-navy px-5 pb-9 pt-10 text-white">
         <span aria-hidden="true" className="absolute -right-16 -top-12 h-48 w-48 rounded-full bg-white/[0.04]" />
         <span aria-hidden="true" className="absolute right-10 -top-8 h-28 w-28 rounded-full bg-apex-blue/10" />
         <div className="relative flex items-center gap-4">

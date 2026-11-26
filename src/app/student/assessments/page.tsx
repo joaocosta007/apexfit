@@ -35,7 +35,7 @@ export default async function StudentAssessmentsPage() {
 
   return (
     <AppShell title="Avaliações" variant="student" userName={session.user.name} showPageHeader={false} hideStudentTopBar bottomNav={<StudentBottomNav active="assessments" />}>
-      <header className="relative -mx-4 -mt-5 mb-5 overflow-hidden bg-apex-navy px-5 pb-8 pt-10 text-white">
+      <header className="student-hero -mx-4 -mt-5 mb-5 overflow-hidden bg-apex-navy px-5 pb-8 pt-10 text-white">
         <span aria-hidden="true" className="absolute -right-12 -top-14 h-44 w-44 rounded-full bg-white/[0.04]" />
         <span aria-hidden="true" className="absolute right-10 -top-9 h-28 w-28 rounded-full bg-apex-blue/10" />
         <p className="relative text-sm font-semibold tracking-wide text-slate-400">{serialized.length ? `Última avaliação: ${latestDate}` : latestDate}</p>
