@@ -216,6 +216,34 @@
 
 /* ── Tela de abertura (halter montando + nome) ───────────────────────── */
 
+/*
+ * Camada de abertura do app instalado (AberturaApp). Oculta por padrão; o
+ * script do layout liga com <html data-abertura="on"> a cada nova abertura.
+ * Fica 2,2 s (montagem + uma repetição do halter) e some em 350 ms, mesmo
+ * que o app já tenha carregado por trás.
+ */
+.abertura-overlay {
+  display: none;
+}
+
+html[data-abertura="on"] .abertura-overlay {
+  display: block;
+  /* A animação de opacidade cria um contexto de empilhamento próprio: o
+     z-index precisa estar aqui, senão elementos "relative" da página passam
+     por cima da camada. */
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  animation: abertura-saida 350ms ease-in 2200ms forwards;
+}
+
+@keyframes abertura-saida {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 .splash-barra,
 .splash-colar,
 .splash-anilha {

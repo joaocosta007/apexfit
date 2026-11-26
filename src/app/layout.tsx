@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { AberturaApp } from "@/components/abertura-app";
 import { ServiceWorkerInit } from "@/components/service-worker-init";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
@@ -61,8 +62,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    // suppressHydrationWarning: o script da abertura marca <html data-abertura> antes da hidratação.
+    <html lang="pt-BR" suppressHydrationWarning>
       <body>
+        <AberturaApp />
         <ServiceWorkerInit />
         {children}
         <Toaster />
