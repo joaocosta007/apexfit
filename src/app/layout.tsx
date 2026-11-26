@@ -22,7 +22,9 @@ export const viewport: Viewport = {
   themeColor: "#0d2342",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1
+  maximumScale: 1,
+  // Libera env(safe-area-inset-*) no iPhone; sem isso a safe area vale 0 no PWA.
+  viewportFit: "cover"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
