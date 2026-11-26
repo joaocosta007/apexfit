@@ -44,7 +44,12 @@ export function AppShell({ title, subtitle, children, action, variant = "default
         )}
 
         <div className={`flex-1 overflow-y-auto overscroll-y-none px-4 pt-5 ${reservarBarra ? "pb-[calc(6.5rem+env(safe-area-inset-bottom))]" : "pb-6"}`}>
-          <StudentPageTransition>
+          {/*
+            1px a mais que a área visível: a rolagem existe mesmo em telas curtas
+            (ex.: Avaliações vazia). Sem isso o iPhone repassa o gesto para a
+            página inteira, que "quica" junto com o cabeçalho fixo.
+          */}
+          <StudentPageTransition className="flow-root min-h-[calc(100%+1px)]">
             <div className={showPageHeader ? "mb-5" : "sr-only"}>
               <h1 className="text-2xl font-black tracking-tight text-apex-ink">{title}</h1>
               {subtitle && <p className="mt-1 text-sm font-medium text-apex-muted">{subtitle}</p>}
