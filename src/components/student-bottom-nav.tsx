@@ -2,6 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChartNoAxesCombined, ClipboardCheck, Dumbbell, UserRound } from "lucide-react";
 import { rememberStudentNavigation } from "@/components/student-page-transition";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,21 @@ const items = [
   { href: "/student/assessments",    icon: ClipboardCheck,       label: "Avaliações", key: "assessments" },
   { href: "/student/dashboard",      icon: UserRound,            label: "Perfil",     key: "profile"     },
 ] as const;
+
+/** Aba ativa a partir da rota (a anamnese é aberta pelo Perfil). */
+function abaDaRota(pathname: string): StudentNavKey | null {
+  if (pathname.startsWith("/student/workouts")) return "workout";
+  if (pathname.startsWith("/student/progress")) return "progress";
+  if (pathname.startsWith("/student/assessments")) return "assessments";
+  if (pathname.startsWith("/student/dashboard") || pathname.startsWith("/student/anamnese")) return "profile";
+  return null;
+}
+
+/** Barra do layout de /student: continua montada entre as telas e segue a rota atual. */
+export function StudentBottomNavRota() {
+  const aba = abaDaRota(usePathname());
+  return aba ? <StudentBottomNav active={aba} /> : null;
+}
 
 const FILTRO_REFRACAO = "apex-glass-refracao";
 const semInscricao = () => () => {};

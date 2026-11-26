@@ -1,7 +1,6 @@
 import { Role } from "@prisma/client";
 import { AppShell } from "@/components/app-shell";
 import { StudentAssessmentData, StudentAssessmentsView } from "@/components/student-assessments-view";
-import { StudentBottomNav } from "@/components/student-bottom-nav";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/session";
 
@@ -34,7 +33,7 @@ export default async function StudentAssessmentsPage() {
     : "Aguardando primeira avaliação";
 
   return (
-    <AppShell title="Avaliações" variant="student" userName={session.user.name} showPageHeader={false} hideStudentTopBar bottomNav={<StudentBottomNav active="assessments" />}>
+    <AppShell title="Avaliações" variant="student" userName={session.user.name} showPageHeader={false} hideStudentTopBar comBarraInferior>
       <header className="student-hero -mx-4 -mt-5 mb-5 overflow-hidden bg-apex-navy px-5 pb-8 pt-10 text-white">
         <span aria-hidden="true" className="absolute -right-12 -top-14 h-44 w-44 rounded-full bg-white/[0.04]" />
         <span aria-hidden="true" className="absolute right-10 -top-9 h-28 w-28 rounded-full bg-apex-blue/10" />

@@ -10,6 +10,8 @@ type AppShellProps = {
   action?: React.ReactNode;
   variant?: "default" | "student";
   bottomNav?: React.ReactNode;
+  /** Reserva espaço para a barra inferior do aluno, que fica no layout de /student (persistente entre telas). */
+  comBarraInferior?: boolean;
   userName?: string | null;
   showPageHeader?: boolean;
   hideStudentTopBar?: boolean;
@@ -19,7 +21,8 @@ function initials(name?: string | null) {
   return (name ?? "Apex Fit").split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase();
 }
 
-export function AppShell({ title, subtitle, children, action, variant = "default", bottomNav, userName, showPageHeader = true, hideStudentTopBar = false }: AppShellProps) {
+export function AppShell({ title, subtitle, children, action, variant = "default", bottomNav, comBarraInferior = false, userName, showPageHeader = true, hideStudentTopBar = false }: AppShellProps) {
+  const reservarBarra = Boolean(bottomNav) || comBarraInferior;
   if (variant === "student") {
     return (
       <div className="mx-auto flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden bg-apex-background shadow-floating">
@@ -40,7 +43,7 @@ export function AppShell({ title, subtitle, children, action, variant = "default
           </header>
         )}
 
-        <div className={`flex-1 overflow-y-auto overscroll-y-none px-4 pt-5 ${bottomNav ? "pb-[calc(6.5rem+env(safe-area-inset-bottom))]" : "pb-6"}`}>
+        <div className={`flex-1 overflow-y-auto overscroll-y-none px-4 pt-5 ${reservarBarra ? "pb-[calc(6.5rem+env(safe-area-inset-bottom))]" : "pb-6"}`}>
           <StudentPageTransition>
             <div className={showPageHeader ? "mb-5" : "sr-only"}>
               <h1 className="text-2xl font-black tracking-tight text-apex-ink">{title}</h1>
