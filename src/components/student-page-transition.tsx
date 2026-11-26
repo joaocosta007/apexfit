@@ -17,6 +17,7 @@ export function rememberStudentNavigation(target: string, direction: StudentNavi
 
 type StudentPageTransitionProps = {
   children: React.ReactNode;
+  className?: string;
 };
 
 /**
@@ -25,7 +26,7 @@ type StudentPageTransitionProps = {
  * (rememberStudentNavigation) que este é o destino do toque. A classe é aplicada
  * antes da pintura (useLayoutEffect), sem estado, para não piscar.
  */
-export function StudentPageTransition({ children }: StudentPageTransitionProps) {
+export function StudentPageTransition({ children, className }: StudentPageTransitionProps) {
   const pathname = usePathname();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -45,5 +46,5 @@ export function StudentPageTransition({ children }: StudentPageTransitionProps) 
     return () => window.clearTimeout(timer);
   }, [pathname]);
 
-  return <div ref={ref}>{children}</div>;
+  return <div ref={ref} className={className}>{children}</div>;
 }
