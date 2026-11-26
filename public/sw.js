@@ -32,39 +32,63 @@ self.addEventListener("notificationclick", (event) => {
 
 // Troque a versão sempre que mudar a estratégia de cache: os aparelhos
 // instalam o SW novo e o "activate" apaga os caches antigos.
-const CACHE = "apexfit-v4";
+const CACHE = "apexfit-v5";
 const OFFLINE_PAGE = "/offline";
+// Tela de abertura do PWA (start_url): pública e estática, servida do cache
+// para aparecer na hora, inclusive sem internet.
+const SPLASH_PAGE = "/abrir";
 const PUBLIC_ASSETS = ["/manifest.json", "/icon.svg", "/icon-192.png", "/icon-512.png"];
 // Páginas autenticadas nunca são cacheadas; a lista só limpa sobras de versões antigas.
 const PRIVATE_PATHS = ["/", "/login"];
 const STATIC_ASSET = /\/_next\/static\/[^"'\s<>\\)]+/g;
 
 /**
- * Guarda a página /offline e todos os JS/CSS que ela usa. Sem isso, num app
- * recém-instalado os chunks ainda não estariam no cache e a página abriria
- * quebrada sem internet.
+ * Baixa uma página pública e guarda o HTML junto com todos os JS/CSS que ela
+ * usa. Sem isso, num app recém-instalado os chunks ainda não estariam no cache
+ * e a página abriria quebrada sem internet.
  */
-async function precacheOfflineShell() {
-  const cache = await caches.open(CACHE);
-  const response = await fetch(OFFLINE_PAGE, { cache: "reload", credentials: "omit" });
-  if (!response.ok) throw new Error(`Falha ao baixar ${OFFLINE_PAGE}: ${response.status}`);
+async function precachePage(cache, path) {
+  const response = await fetch(path, { cache: "reload", credentials: "omit" });
+  if (!response.ok) throw new Error(`Falha ao baixar ${path}: ${response.status}`);
 
   const html = await response.text();
   // Recria a resposta para nunca guardar uma resposta "redirecionada": o Safari
   // e o Chrome recusam servi-las para navegações e mostram o erro de rede nativo.
-  await cache.put(
-    OFFLINE_PAGE,
-    new Response(html, { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } })
-  );
+  await cache.put(path, new Response(html, { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }));
+  return html.match(STATIC_ASSET) ?? [];
+}
 
-  const assets = [...new Set(html.match(STATIC_ASSET) ?? [])];
+async function precacheOfflineShell() {
+  const cache = await caches.open(CACHE);
+  const assets = (await Promise.all([precachePage(cache, OFFLINE_PAGE), precachePage(cache, SPLASH_PAGE)])).flat();
   await Promise.all(
-    [...assets, ...PUBLIC_ASSETS].map((url) =>
+    [...new Set([...assets, ...PUBLIC_ASSETS])].map((url) =>
       cache.add(url).catch(() => {
         // Um asset que falhe não deve impedir a instalação do SW.
       })
     )
   );
+}
+
+/** Abertura: responde na hora com o cache e atualiza a cópia em segundo plano. */
+async function splashFromCache(event) {
+  const cache = await caches.open(CACHE);
+  const cached = await cache.match(SPLASH_PAGE);
+  const fresh = fetch(SPLASH_PAGE, { cache: "no-cache", credentials: "omit" })
+    .then(async (response) => {
+      if (response.ok && !response.redirected) {
+        const html = await response.text();
+        await cache.put(SPLASH_PAGE, new Response(html, { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }));
+        return new Response(html, { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } });
+      }
+      return response;
+    });
+
+  if (cached) {
+    event.waitUntil(fresh.catch(() => undefined));
+    return cached;
+  }
+  return fresh.catch(() => offlineFallback(event.request));
 }
 
 async function offlineFallback(request) {
@@ -141,5 +165,9 @@ self.addEventListener("fetch", (event) => {
   // Navegação: sempre rede primeiro (nunca cacheia HTML privado). Sem rede,
   // cai na página /offline, que lê o treino salvo no IndexedDB.
   if (event.request.mode !== "navigate") return;
+  if (requestUrl.pathname === SPLASH_PAGE) {
+    event.respondWith(splashFromCache(event));
+    return;
+  }
   event.respondWith(fetch(event.request).catch(() => offlineFallback(event.request)));
 });

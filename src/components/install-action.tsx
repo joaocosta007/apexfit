@@ -71,7 +71,8 @@ export function InstallAction({ installUrl, qrSvg }: { installUrl: string; qrSvg
   const aparelho = useSyncExternalStore<Aparelho>(semInscricao, detectarAparelho, () => "detectando");
 
   useEffect(() => {
-    if (aparelho === "instalado") router.replace("/");
+    // Passa pela tela de abertura (o iOS pode ignorar o start_url do manifest).
+    if (aparelho === "instalado") router.replace("/abrir");
   }, [aparelho, router]);
 
   return (
