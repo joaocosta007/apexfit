@@ -40,7 +40,7 @@ export function AppShell({ title, subtitle, children, action, variant = "default
           </header>
         )}
 
-        <div className={`flex-1 overflow-y-auto px-4 pt-5 ${bottomNav ? "pb-[calc(6.5rem+env(safe-area-inset-bottom))]" : "pb-6"}`}>
+        <div className={`flex-1 overflow-y-auto overscroll-y-none px-4 pt-5 ${bottomNav ? "pb-[calc(6.5rem+env(safe-area-inset-bottom))]" : "pb-6"}`}>
           <StudentPageTransition>
             <div className={showPageHeader ? "mb-5" : "sr-only"}>
               <h1 className="text-2xl font-black tracking-tight text-apex-ink">{title}</h1>

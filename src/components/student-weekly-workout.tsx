@@ -89,7 +89,7 @@ export function StudentWeeklyWorkout({ plan, todayIndex, todayLabel, streak, per
 
   return (
     <div className="space-y-4">
-      <section className="sticky top-0 z-20 -mx-4 -mt-5 -translate-y-5 overflow-hidden bg-apex-navy px-5 pb-7 pt-10 text-white shadow-[0_8px_20px_rgba(13,35,66,0.18)]">
+      <section className="student-hero -mx-4 -mt-5 overflow-hidden bg-apex-navy px-5 pb-7 pt-10 text-white">
         <span className="absolute -right-12 -top-10 h-44 w-44 rounded-full bg-blue-500/10" aria-hidden="true" />
         <span className="absolute right-10 -top-7 h-28 w-28 rounded-full bg-blue-500/20" aria-hidden="true" />
         <div className="relative flex items-start justify-between gap-4">
